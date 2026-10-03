@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import Logo from "../components/Logo";
+
 
 function HomePage() {
   const { user, profile, loading: authLoading } = useAuth();
 
+
   const [loadingMentors, setLoadingMentors] = useState(true);
+
 
   // No longer using featured mentors, but keeping effect in case you need it later
   useEffect(() => {
@@ -15,8 +19,10 @@ function HomePage() {
       setLoadingMentors(false);
     };
 
+
     loadMentors();
   }, []);
+
 
   if (authLoading) {
     return (
@@ -25,6 +31,7 @@ function HomePage() {
       </div>
     );
   }
+
 
   return (
     <div
@@ -45,9 +52,30 @@ function HomePage() {
           marginBottom: "2rem",
         }}
       >
-        <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-          MentorMatch
-        </div>
+       <Link
+  to="/"
+  aria-label="MentorMatch home"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.55rem",
+    textDecoration: "none",
+  }}
+>
+  <Logo />
+
+  <span
+    style={{
+      fontWeight: 800,
+      fontSize: "1.15rem",
+      letterSpacing: "-0.02em",
+    }}
+  >
+    <span style={{ color: "#1d4ed8" }}>Mentor</span>
+    <span style={{ color: "#000000" }}>Match</span>
+  </span>
+</Link>
+
 
         <div style={{ display: "flex", gap: "0.75rem" }}>
           {!user ? (
@@ -81,6 +109,7 @@ function HomePage() {
         </div>
       </header>
 
+
       {/* Main content wrapper */}
       <div style={{ flex: 1 }}>
         {/* 1. Hero Section with image on the right */}
@@ -105,6 +134,7 @@ function HomePage() {
               Find Your Perfect Mentor. Accelerate Your Skills.
             </h1>
 
+
             <p
               style={{
                 marginTop: "0.75rem",
@@ -115,6 +145,7 @@ function HomePage() {
               A secure platform for students to find mentors, view availability,
               request mentorship sessions, and avoid booking conflicts.
             </p>
+
 
             {/* Search Bar (UI only for now) */}
             <div
@@ -154,6 +185,7 @@ function HomePage() {
               </Link>
             </div>
 
+
             {/* Dual CTAs */}
             <div
               style={{
@@ -170,6 +202,7 @@ function HomePage() {
               </Link>
             </div>
           </div>
+
 
           {/* Right: hero image */}
           <div
@@ -192,6 +225,78 @@ function HomePage() {
           </div>
         </section>
 
+
+        {/* About MentorMatch */}
+        <section
+          id="about"
+          style={{
+            padding: "0rem 0",
+            marginBottom: "1rem",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "900px",
+              margin: "0 auto",
+              textAlign: "justified",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "1.6rem",
+                 borderTop: "2px solid var(--border)",
+                marginBottom: "1.5rem",
+              }}
+            >
+              About MentorMatch
+            </h2>
+
+
+            <p
+              style={{
+                fontSize: "1.05rem",
+                lineHeight: 1.7,
+                color: "var(--text)",
+              }}
+            >
+              MentorMatch is a mentorship platform that connects students with
+              experienced mentors for academic, career, and personal
+              development.
+            </p>
+
+
+            <p
+              style={{
+                fontSize: "1.05rem",
+                lineHeight: 1.7,
+                color: "var(--text)",
+              }}
+            >
+              Our goal is to make quality mentorship accessible. Students can
+              browse approved mentors, explore their skills and areas of
+              expertise, and book one-to-one mentoring sessions at times that
+              work for them.
+            </p>
+
+
+            <p
+              style={{
+                fontSize: "1.05rem",
+                lineHeight: 1.7,
+                color: "var(--text)",
+                marginBottom: 0,
+              }}
+            >
+              Mentors can share their knowledge, guide students through
+              academic and career challenges, manage their availability, and
+              support the next generation of learners. MentorMatch helps create
+              meaningful connections where experience meets ambition 
+              supporting confidence, growth, and success.
+            </p>
+          </div>
+        </section>
+
+
         {/* 2. How It Works with icons (no images) */}
         <section
           style={{
@@ -211,6 +316,7 @@ function HomePage() {
             How It Works
           </h2>
 
+
           <div className="grid-3">
             <div className="card" style={{ textAlign: "center" }}>
               <div
@@ -229,6 +335,7 @@ function HomePage() {
               </p>
             </div>
 
+
             <div className="card" style={{ textAlign: "center" }}>
               <div
                 style={{
@@ -246,6 +353,7 @@ function HomePage() {
               </p>
             </div>
 
+
             <div className="card" style={{ textAlign: "center" }}>
               <div
                 style={{
@@ -253,7 +361,7 @@ function HomePage() {
                   marginBottom: "0.75rem",
                 }}
               >
-                💬
+                💬🎓
               </div>
               <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.1rem" }}>
                 3. Connect 1-on-1
@@ -265,6 +373,7 @@ function HomePage() {
           </div>
         </section>
       </div>
+
 
       {/* Footer */}
       <footer
@@ -289,5 +398,6 @@ function HomePage() {
     </div>
   );
 }
+
 
 export default HomePage;
