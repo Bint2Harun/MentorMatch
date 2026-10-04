@@ -139,20 +139,11 @@ function StudentDashboard() {
             to="/student-bookings"
             className={`dashboard-nav-link ${
               isActive("/student-bookings") ? "dashboard-nav-active" : ""
+          
             }`}
           >
             <span className="dashboard-nav-icon">▣</span>
             My Bookings
-          </Link>
-
-          <Link
-            to="/student-availability"
-            className={`dashboard-nav-link ${
-              isActive("/student-availability") ? "dashboard-nav-active" : ""
-            }`}
-          >
-            <span className="dashboard-nav-icon">◷</span>
-            Availability
           </Link>
 
           <Link

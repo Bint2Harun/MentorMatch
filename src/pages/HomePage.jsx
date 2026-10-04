@@ -12,7 +12,7 @@ function HomePage() {
   const [loadingMentors, setLoadingMentors] = useState(true);
 
 
-  // No longer using featured mentors, but keeping effect in case you need it later
+  //I No longer using featured mentors, but keeping effect in case I need it later
   useEffect(() => {
     const loadMentors = async () => {
       setLoadingMentors(true);
@@ -168,18 +168,7 @@ function HomePage() {
                   border: "1px solid var(--border)",
                 }}
               />
-              <select
-                style={{
-                  padding: "0.75rem",
-                  borderRadius: "6px",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <option value="">All availability</option>
-                <option value="weekdays">Weekdays</option>
-                <option value="weekends">Weekends</option>
-                <option value="evenings">Evenings</option>
-              </select>
+              
               <Link to="/browse-mentors" className="btn btn-primary">
                 Search
               </Link>
