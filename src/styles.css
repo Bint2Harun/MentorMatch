@@ -1,26 +1,40 @@
 /*
  * Single stylesheet entry point.
  *
- * Cascade layer order is the load-bearing part of this file.
+ * The cascade layer order below is the load-bearing part of this file.
  *
- * `index.css` is the legacy stylesheet. It styles dashboards through bare
- * element selectors (`h1`, `label`, `a`, `input`, ...), which are unlayered and
- * therefore beat *every* layered rule regardless of specificity. Left as-is,
- * that silently defeats Tailwind utilities on the public pages: `h1` would
- * render with `index.css`'s heading colour even in dark mode, because
- * `dark:text-white` sits in `@layer utilities` and unlayered rules win.
+ * `index.css` is the legacy stylesheet. It styles the dashboards through class
+ * rules (`.btn`, `.btn-primary`, ...) and bare element selectors (`h1`, `label`,
+ * `input`, ...) that were written expecting to be unlayered. Unlayered rules
+ * beat every layered rule regardless of specificity, so importing it as-is
+ * causes two distinct problems:
  *
- * So `index.css` is imported into the lowest layer, below Tailwind's own
- * `theme`/`base`/`components`/`utilities`. Consequences:
+ *   - Left unlayered, index.css beats Tailwind utilities. `h1` would keep
+ *     index.css's heading colour even in dark mode, because `dark:text-white`
+ *     lives in `@layer utilities` and unlayered rules win. Dark mode would be
+ *     silently half-applied and very hard to debug.
  *
- *   - Public pages: Tailwind utilities now win over `index.css` element
- *     defaults, including the `dark:` variants.
- *   - Dashboards: unchanged. They use no Tailwind utility classes, so nothing
- *     reorders for them, and `index.css` still beats Tailwind's preflight
- *     because it is lower in the layer order.
+ *   - Placed below `base`, which is where it was first tried: worse. Tailwind's
+ *     preflight also lives in `@layer base`, so preflight beats index.css and
+ *     strips the dashboard buttons' borders, radii and variant colours. `.btn`
+ *     collapses into a transparent rectangle.
+ *
+ * So `legacy` sits *between* `base` and `components`, which is precisely the gap
+ * these two stylesheets need:
+ *
+ *     theme < base (preflight) < legacy (index.css) < components < utilities
+ *
+ * Consequences:
+ *   - Dashboards are unchanged: index.css still outranks preflight, so `.btn`
+ *     keeps its radius, min-height and variant colours.
+ *   - Public pages: Tailwind utilities outrank the index.css element defaults,
+ *     including every `dark:` variant.
+ *
+ * Do not reorder these layers without re-running the dashboard regression check;
+ * the public and dashboard stylesheets both depend on this exact ordering.
  */
 
-@layer legacy, theme, base, components, utilities;
+@layer theme, base, legacy, components, utilities;
 
 @import "./index.css" layer(legacy);
 @import "./marketing-tw.css";

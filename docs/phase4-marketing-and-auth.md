@@ -1,7 +1,8 @@
 # Phase 4: public marketing site and auth pages
 
-Status: implemented and verified locally. Not yet committed, and migrations
-`0001`-`0005` have never been applied to a live Supabase project.
+Status: implemented and verified locally. Migrations `0001`-`0005` have never
+been applied to a live Supabase project, so the auth flows below are exercised
+against stubbed responses rather than a real backend.
 
 ## What was built
 
@@ -89,14 +90,59 @@ Both features are wired but depend on console configuration.
 link" state rather than a form that silently fails, and it defers that check
 until `loading` settles so a valid link is not briefly shown as expired.
 
+## Tailwind v4 migration and the cascade layer trap
+
+The public pages were later restyled onto Tailwind v4 (`@tailwindcss/vite`),
+with the dashboards deliberately left on `index.css`. Dark mode is class-based:
+a `.dark` class on `<html>`, toggled from the header and persisted under
+`mentormatch-theme`.
+
+That split only works because of one line in `src/styles.css`:
+
+```css
+@layer theme, base, legacy, components, utilities;
+
+@import "./index.css" layer(legacy);
+@import "./marketing-tw.css";
+```
+
+`index.css` styles dashboards through bare element selectors that were written
+expecting to be *unlayered*, and unlayered rules beat every layered rule
+regardless of specificity. Both naive placements fail, in opposite directions:
+
+| `legacy` layer position | Result |
+| --- | --- |
+| left unlayered | `index.css` beats Tailwind utilities, so `dark:` variants are silently ignored and dark mode is half-applied |
+| below `base` | Tailwind preflight also lives in `@layer base`, so preflight beats `index.css` and strips `.btn`'s border, radius and variant colours |
+
+Between `base` and `components` is the only ordering that satisfies both:
+preflight loses to `index.css` (dashboards keep their styling) and `index.css`
+loses to `utilities` (public pages get correct light and dark colours). Do not
+reorder these layers without re-running `verify-dashboards.mjs`.
+
+Two real bugs surfaced while closing out the migration, both of which the
+compiler and the build both missed:
+
+- `LoginPage.jsx` used `className={authError}` without importing `authError`.
+  An unimported identifier in JSX is a *runtime* `ReferenceError`, so it only
+  fired when a login actually failed. `verify-auth-errors.mjs` now drives real
+  rejections and asserts the styled banner renders.
+- `SiteHeader` read the theme in an effect and immediately called `setState`,
+  costing a second render pass for a value it already had. Moved to a lazy
+  `useState` initializer; the effect now only syncs the class onto `<html>`.
+
+`src/marketing.css` and `src/App.css` were unreferenced once the Tailwind
+classes landed and have been deleted.
+
 ## Verification performed
 
 Run against a local Vite server with a placeholder Supabase URL, so the RPC
 fails as it would without a project.
 
 - `npx tsc --noEmit` clean; `npx vite build` passes.
-- ESLint unchanged at 10 problems (9 errors, 1 warning), all pre-existing in
-  dashboard files. Every file touched here is lint-clean.
+- ESLint improved from 13 errors / 1 warning at `HEAD` to 9 errors / 1 warning.
+  Every remaining problem is pre-existing in a dashboard or context file; every
+  file touched by this work is lint-clean.
 - Browser suites (Puppeteer + system Chrome), all passing:
   - `verify-marketing.mjs` 92 assertions: routes, hash anchors, link
     resolution, overflow at 320-1440px, hero/nav/pill/footer content, legal
@@ -104,16 +150,42 @@ fails as it would without a project.
   - `verify-truststats.mjs` 14 assertions: banner withheld on all-zero and on
     RPC failure, shown with formatted numbers, notes only when meaningful, no
     invented rating.
-  - `verify-auth.mjs` 87 assertions: single `<main>`, no duplicate brand,
+  - `verify-auth.mjs` 88 assertions: single `<main>`, no duplicate brand,
     promo/card never intersect, Log In matches Register colour, uniform pills,
     card shadow/border, password toggle round-trip, forgot link, Google button,
     footer position.
+  - `verify-darkmode.mjs` 105 assertions: toggle state, `localStorage`
+    persistence, OS-preference default, WCAG contrast pairs in both themes,
+    zero horizontal overflow across 9 routes x 12 widths x 2 themes, and a
+    dashboard guard that `index.css` still beats preflight.
+  - `verify-a11y.mjs` 152 assertions: landmarks, keyboard access, focus
+    visibility, reduced motion, accessible names, image alternatives.
+  - `verify-dashboards.mjs` 62 assertions across 8 protected routes. Seeds a
+    Supabase session into `localStorage` under the key supabase-js derives from
+    the project URL, then asserts each dashboard reaches its own route and that
+    `.btn` keeps its 8px radius, 40px min-height and variant background while
+    inputs keep their 1px border.
+  - `verify-auth-errors.mjs` 10 assertions: server rejections from `/token`,
+    `/signup` and `/recover` render the styled error and status regions.
   - `audit-auth-contrast.mjs`: 40+ WCAG contrast pairs.
-  - Zero horizontal overflow across 9 pages x 11 widths.
+
+Two test bugs worth noting, because both initially produced confident false
+passes rather than failures:
+
+- The Supabase stub answered every `/rest/v1/profiles` request with a single
+  object. `AuthContext` fetches with `.single()` but `AdminDashboard` fetches
+  the same table as a list, so one of the two always crashed. supabase-js
+  signals this through the `Accept` header (`pgrst.object`), so the stub now
+  branches on it the way PostgREST does.
+- The preflight response omitted `x-supabase-api-version`. That failed CORS, so
+  the app reported "Failed to fetch" instead of the server's actual message,
+  and a test asserting "an error appeared" would have passed while checking
+  nothing about error handling.
 
 ## Not covered
 
 - Real sign-in, real OAuth and real reset emails: untested, because no
-  Supabase project credentials are available in this environment.
+  Supabase project credentials are available in this environment. The stubbed
+  rejections exercise the UI paths only.
 - Visual review. Screenshots were produced but could not be inspected
   automatically; layout was verified by measuring geometry rather than by eye.

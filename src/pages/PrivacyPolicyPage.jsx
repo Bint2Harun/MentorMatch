@@ -46,7 +46,7 @@ function PrivacyPolicyPage() {
         },
         {
           heading: "Cookies and local storage",
-          body: "MentorMatch stores your session in your browser's local storage so you stay signed in. We do not use advertising or cross-site tracking cookies.",
+          body: "MentorMatch stores your session in your browser's local storage so you stay signed in, and remembers whether you chose the light or dark theme under the key 'mentormatch-theme'. We do not use advertising or cross-site tracking cookies.",
         },
       ]}
     />

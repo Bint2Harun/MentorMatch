@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "./Logo";
-import { btnBase, btnOutline, btnPrimary } from "./marketing-ui";
+import { btnOutline, btnPrimary } from "./marketing-ui";
 
 const NAV_LINKS = [
   { to: "/browse-mentors", label: "Browse Mentors" },
@@ -24,28 +24,36 @@ function dashboardPathFor(role) {
  * bar without inheriting the sidebar layout. "Login" is the outline variant and
  * "Register" the solid one, so the account action reads as the primary CTA.
  */
+/**
+ * Resolve the initial theme: an explicit stored choice wins, otherwise follow
+ * the OS setting. Returns false if storage is unavailable (private browsing).
+ *
+ * Called as a lazy `useState` initializer so the very first render already has
+ * the right value. That keeps the effect below free of `setState`, which would
+ * otherwise trigger a second render pass purely to sync state it already has.
+ */
+function initialTheme() {
+  try {
+    const stored = window.localStorage.getItem("mentormatch-theme");
+
+    return (
+      stored === "dark" ||
+      (stored !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function SiteHeader() {
   const { user, profile } = useAuth();
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(initialTheme);
 
-  // Read the stored preference once on mount, then apply. Inlined so it cannot
-  // flash light before the class lands on <html>.
+  // Mirror the resolved theme onto <html>, which is where the CSS custom
+  // variant reads it from. DOM sync only; no state to set here.
   useEffect(() => {
-    let initial = false;
-
-    try {
-      const stored = window.localStorage.getItem("mentormatch-theme");
-      initial =
-        stored === "dark" ||
-        (stored !== "light" &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches);
-    } catch {
-      initial = false;
-    }
-
-    document.documentElement.classList.toggle("dark", initial);
-    setDark(initial);
-  }, []);
+    document.documentElement.classList.toggle("dark", dark);
+  }, [dark]);
 
   const toggleTheme = () => {
     const next = !dark;

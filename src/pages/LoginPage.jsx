@@ -7,6 +7,7 @@ import {
   authCardSub,
   authCardTitle,
   authDivider,
+  authError,
   authFoot,
   authInput,
   authLabel,
