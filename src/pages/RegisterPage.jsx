@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import {
+  CheckCircleIcon,
+  ArrowLeftIcon,
+  EyeIcon,
+  EyeOffIcon,
+} from "../components/Icons";
+
+const PILLS = ["Join as a student", "Find guidance", "Grow with confidence"];
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -12,6 +20,7 @@ function RegisterPage() {
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -65,362 +74,153 @@ function RegisterPage() {
     }, 1500);
   };
 
-  const inputStyle = {
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "0.85rem 0.95rem",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
-    fontSize: "1rem",
-    outline: "none",
-  };
-
-  const labelStyle = {
-    display: "block",
-    marginBottom: "0.45rem",
-    fontWeight: 700,
-    color: "#374151",
-  };
-
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem 1rem",
-        background:
-          "linear-gradient(135deg, #eff6ff 0%, #f8fafc 45%, #eef2ff 100%)",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1050px",
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(340px, 430px)",
-          gap: "4rem",
-          alignItems: "center",
-        }}
-      >
-        {/* Branding side */}
-        <section
-          style={{
-            maxWidth: "520px",
-            padding: "1rem",
-          }}
-        >
-          <Link
-            to="/"
-            aria-label="MentorMatch home"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.6rem",
-              textDecoration: "none",
-              marginBottom: "1.5rem",
-            }}
-          >
-            <span
-              aria-hidden="true"
-              style={{
-                width: "46px",
-                height: "46px",
-                borderRadius: "13px",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#eaf1ff",
-                border: "1px solid #bfd3ff",
-                fontSize: "1.55rem",
-              }}
-            >
-              🎓
-            </span>
-
-            <span
-              style={{
-                fontWeight: 800,
-                fontSize: "1.7rem",
-                letterSpacing: "-0.04em",
-              }}
-            >
-              <span style={{ color: "#1d4ed8" }}>Mentor</span>
-              <span style={{ color: "#111827" }}>Match</span>
-            </span>
-          </Link>
-
-          <h1
-            style={{
-              fontSize: "2.8rem",
-              lineHeight: 1.12,
-              margin: "0 0 1rem",
-              color: "#111827",
-              letterSpacing: "-0.04em",
-            }}
-          >
+    // Inside MarketingLayout, which already owns the header, footer and the
+    // bottom-anchored flex column.
+    <div className="auth-page">
+      <div className="auth-layout">
+        <section className="auth-promo">
+          <h1 className="auth-title">
             Start your mentorship journey today.
           </h1>
 
-          <p
-            style={{
-              margin: 0,
-              maxWidth: "500px",
-              color: "#4b5563",
-              fontSize: "1.12rem",
-              lineHeight: 1.7,
-            }}
-          >
+          <p className="auth-lede">
             Create a free Student account to discover approved mentors, request
             one-to-one sessions, and receive guidance for your academic and
             career goals.
           </p>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "0.75rem",
-              flexWrap: "wrap",
-              marginTop: "1.5rem",
-            }}
-          >
-            <span
-              style={{
-                background: "#dbeafe",
-                color: "#1d4ed8",
-                padding: "0.45rem 0.75rem",
-                borderRadius: "999px",
-                fontSize: "0.85rem",
-                fontWeight: 700,
-              }}
-            >
-              Join as a student
-            </span>
-
-            <span
-              style={{
-                background: "#e0e7ff",
-                color: "#db930c",
-                padding: "0.45rem 0.75rem",
-                borderRadius: "999px",
-                fontSize: "0.85rem",
-                fontWeight: 700,
-              }}
-            >
-              Find guidance
-            </span>
-
-            <span
-              style={{
-                background: "#dcfce7",
-                color: "#166534",
-                padding: "0.45rem 0.75rem",
-                borderRadius: "999px",
-                fontSize: "0.85rem",
-                fontWeight: 700,
-              }}
-            >
-              Grow with confidence
-            </span>
-          </div>
+          <ul className="auth-pills">
+            {PILLS.map((pill) => (
+              <li className="auth-pill" key={pill}>
+                <CheckCircleIcon width={15} height={15} />
+                {pill}
+              </li>
+            ))}
+          </ul>
         </section>
 
-        {/* Registration card */}
-        <section
-          aria-label="Registration form"
-          style={{
-            width: "100%",
-            background: "#ffffff",
-            padding: "2rem",
-            borderRadius: "16px",
-            boxShadow: "0 18px 45px rgba(30, 64, 175, 0.14)",
-            border: "1px solid #e5e7eb",
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-            <h2
-              style={{
-                margin: "0 0 0.5rem",
-                color: "#111827",
-                fontSize: "1.6rem",
-              }}
-            >
-              Create your account
-            </h2>
-
-            <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.5 }}>
+        <section className="auth-card" aria-label="Registration form">
+          <div className="auth-card-head">
+            <h2 className="auth-card-title">Create your account</h2>
+            <p className="auth-card-sub">
               Join MentorMatch and begin as a Student.
             </p>
           </div>
 
-          <div
-            style={{
-              marginBottom: "1.25rem",
-              padding: "0.8rem 0.9rem",
-              borderRadius: "8px",
-              background: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              color: "#1e40af",
-              fontSize: "0.9rem",
-              lineHeight: 1.55,
-            }}
-          >
-            Mentor and Administrator access can only be assigned through the approved
-            system workflow.
+          <div className="auth-note">
+            Mentor and Administrator access can only be assigned through the
+            approved system workflow.
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: "1rem" }}>
-              <label htmlFor="fullName" style={labelStyle}>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="fullName">
                 Full name
               </label>
 
               <input
                 id="fullName"
+                name="fullName"
                 type="text"
+                className="auth-input"
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
                 placeholder="Enter your full name"
                 autoComplete="name"
-                style={inputStyle}
               />
             </div>
 
-            <div style={{ marginBottom: "1rem" }}>
-              <label htmlFor="email" style={labelStyle}>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="email">
                 Email address
               </label>
 
               <input
                 id="email"
+                name="email"
                 type="email"
+                className="auth-input"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="example@email.com"
                 autoComplete="email"
-                style={inputStyle}
               />
             </div>
 
-            <div style={{ marginBottom: "1rem" }}>
-              <label htmlFor="password" style={labelStyle}>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="password">
                 Password
               </label>
 
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="At least 6 characters"
-                autoComplete="new-password"
-                style={inputStyle}
-              />
+              <div className="auth-password-wrap">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  className="auth-input"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="At least 6 characters"
+                  autoComplete="new-password"
+                />
+
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={
+                    showPassword ? "Hide password" : "Show password"
+                  }
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <EyeOffIcon width={19} height={19} />
+                  ) : (
+                    <EyeIcon width={19} height={19} />
+                  )}
+                </button>
+              </div>
             </div>
 
             {errorMessage && (
-              <div
-                role="alert"
-                style={{
-                  marginBottom: "1rem",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
-                  color: "#b91c1c",
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  fontSize: "0.92rem",
-                }}
-              >
+              <div className="auth-error" role="alert">
                 {errorMessage}
               </div>
             )}
 
             {message && (
-              <div
-                role="status"
-                style={{
-                  marginBottom: "1rem",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
-                  color: "#166534",
-                  background: "#f0fdf4",
-                  border: "1px solid #bbf7d0",
-                  fontSize: "0.92rem",
-                  lineHeight: 1.5,
-                }}
-              >
-                {message}
+              <div className="auth-success" role="status">
+                <CheckCircleIcon width={18} height={18} />
+                <span>{message}</span>
               </div>
             )}
 
             <button
               type="submit"
+              className="btn btn-primary auth-submit"
               disabled={submitting}
-              style={{
-                width: "100%",
-                border: "none",
-                borderRadius: "8px",
-                padding: "0.9rem 1rem",
-                background: submitting ? "#93c5fd" : "#08c567",
-                color: "#ffffff",
-                fontSize: "1rem",
-                fontWeight: 700,
-                cursor: submitting ? "not-allowed" : "pointer",
-              }}
             >
               {submitting ? "Creating account..." : "Create account"}
             </button>
           </form>
 
-          <div
-            style={{
-              margin: "1.5rem 0",
-              borderTop: "1px solid #e5e7eb",
-            }}
-          />
+          <hr className="auth-rule" />
 
-          <p
-            style={{
-              textAlign: "center",
-              margin: 0,
-              color: "#4b5563",
-              lineHeight: 1.6,
-            }}
-          >
+          <p className="auth-foot">
             Already have an account?{" "}
-            <Link
-              to="/login"
-              style={{
-                color: "#d1a207",
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
-            >
+            <Link to="/login" className="text-link">
               Log in
             </Link>
           </p>
 
-          <p
-            style={{
-              textAlign: "center",
-              margin: "1rem 0 0",
-              fontSize: "0.9rem",
-            }}
-          >
-            <Link
-              to="/"
-              style={{
-                color: "#6b7280",
-                textDecoration: "none",
-              }}
-            >
-              ← Back to home
-            </Link>
-          </p>
+          <Link to="/" className="auth-back">
+            <ArrowLeftIcon width={15} height={15} />
+            Back to home
+          </Link>
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 

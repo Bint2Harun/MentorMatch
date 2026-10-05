@@ -1088,6 +1088,13 @@
   color: #9aa5b4;
 }
 
+/* #7d8b99 reaches 3.49:1 on white, clearing WCAG 1.4.11 for the field boundary.
+   The lighter --border token measured only 1.27:1, which made the inputs hard
+   to distinguish from the card behind them. */
+.auth-input {
+  border-color: #7d8b99;
+}
+
 .auth-input:focus {
   border-color: var(--logo-green-text);
   box-shadow: 0 0 0 4px rgba(10, 194, 127, 0.16);
@@ -1157,6 +1164,18 @@
   text-underline-offset: 3px;
 }
 
+/* Informational banner inside a form card. */
+.auth-note {
+  margin-bottom: 1.25rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #cfe6da;
+  border-radius: 9px;
+  background: #f4fbf8;
+  color: #0b5c3b;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .auth-error {
   margin-bottom: 1rem;
   padding: 0.75rem 0.85rem;
@@ -1207,7 +1226,8 @@
   gap: 0.6rem;
   width: 100%;
   padding: 0.8rem 1rem;
-  border: 1px solid var(--border);
+  /* 3.49:1 on white, same reason as .auth-input above. */
+  border: 1px solid #7d8b99;
   border-radius: 10px;
   background: #ffffff;
   color: #374151;
