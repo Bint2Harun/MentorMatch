@@ -134,6 +134,17 @@ compiler and the build both missed:
 `src/marketing.css` and `src/App.css` were unreferenced once the Tailwind
 classes landed and have been deleted.
 
+The migration also silently dropped a responsive rule from the old stylesheet.
+`.auth-layout` had an `@media (max-width: 900px)` block that set
+`.auth-card { order: 1 }` and `.auth-promo { order: 2 }`, with a comment
+explaining that stacked content had pushed the login form below the fold on
+phones. The Tailwind version had no equivalent, so source order won: at 360px
+the promo sat at y=194 and the form at y=905, roughly 700px of headline before
+the first input. Restored as `order-1`/`order-2` on the shared `authCard` and
+`authPromo` constants, with `lg:` variants restoring promo-left/card-right. This
+is the kind of rule that a class-by-class port can miss entirely, so
+`verify-auth.mjs` now asserts stacking order at eight widths.
+
 ## Verification performed
 
 Run against a local Vite server with a placeholder Supabase URL, so the RPC
@@ -150,9 +161,10 @@ fails as it would without a project.
   - `verify-truststats.mjs` 14 assertions: banner withheld on all-zero and on
     RPC failure, shown with formatted numbers, notes only when meaningful, no
     invented rating.
-  - `verify-auth.mjs` 88 assertions: single `<main>`, no duplicate brand,
-    promo/card never intersect, Log In matches Register colour, uniform pills,
-    card shadow/border, password toggle round-trip, forgot link, Google button,
+  - `verify-auth.mjs` 96 assertions: single `<main>`, no duplicate brand,
+    promo/card never intersect, the form stacks above the promo below 1024px and
+    trails it above, Log In matches Register colour, uniform pills, card
+    shadow/border, password toggle round-trip, forgot link, Google button,
     footer position.
   - `verify-darkmode.mjs` 105 assertions: toggle state, `localStorage`
     persistence, OS-preference default, WCAG contrast pairs in both themes,

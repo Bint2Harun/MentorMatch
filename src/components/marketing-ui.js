@@ -42,14 +42,23 @@ export const surfaceCard =
 
 /* ------------------------------------------------------------------ auth */
 
-/** Outer wrapper. The promo panel sits above the form on narrow screens. */
+/** Outer wrapper. */
 export const authPage = "px-5 py-8 sm:py-12 lg:py-16";
 
 export const authLayout =
   "mx-auto grid w-full max-w-[1080px] items-center gap-8 lg:grid-cols-[1fr_1.05fr] lg:gap-14";
 
+/*
+ * Below `lg` this grid is a single column, so DOM order decides the visual
+ * stack. These two `order` pairs deliberately invert it: the card comes first
+ * on phones so the fields are reachable without scrolling past the headline,
+ * which pushed the login form roughly 700px down the page. Above `lg` the grid
+ * has two columns and order is restored to promo-left, card-right.
+ *
+ * Do not "simplify" these back to source order without re-measuring at 360px.
+ */
 export const authPromo =
-  "rounded-2xl border border-[var(--hairline)] bg-[var(--surface-sunken)] p-7 sm:p-8";
+  "order-2 rounded-2xl border border-[var(--hairline)] bg-[var(--surface-sunken)] p-7 sm:p-8 lg:order-1";
 
 export const authTitle =
   "text-[clamp(1.7rem,3.2vw,2.2rem)] leading-[1.15] font-black tracking-[-0.03em] text-ink-900 dark:text-white";
@@ -61,7 +70,7 @@ export const authPills =
   "mt-6 flex list-none flex-wrap gap-2 p-0";
 
 export const authCard =
-  "rounded-2xl border border-[var(--hairline)] bg-[var(--surface)] p-7 shadow-[0_2px_16px_rgba(11,28,50,0.06)] sm:p-9";
+  "order-1 rounded-2xl border border-[var(--hairline)] bg-[var(--surface)] p-7 shadow-[0_2px_16px_rgba(11,28,50,0.06)] sm:p-9 lg:order-2";
 
 export const authCardTitle =
   "text-[1.5rem] leading-tight font-black tracking-[-0.025em] text-ink-900 dark:text-white";
