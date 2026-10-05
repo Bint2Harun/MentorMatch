@@ -1,404 +1,231 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { supabase } from "../lib/supabase";
-import Logo from "../components/Logo";
+import TrustStats from "../components/TrustStats";
+import {
+  SearchIcon,
+  CalendarIcon,
+  VideoIcon,
+  ShieldCheckIcon,
+  ArrowRightIcon,
+} from "../components/Icons";
 
+const STEPS = [
+  {
+    icon: SearchIcon,
+    title: "Choose an expert",
+    body: "Browse verified mentors by subject, industry, faculty and live availability.",
+  },
+  {
+    icon: CalendarIcon,
+    title: "Pick a date & time",
+    body: "Select a slot that matches the mentor's weekly availability. No double bookings, ever.",
+  },
+  {
+    icon: VideoIcon,
+    title: "Connect 1-on-1",
+    body: "Meet over video and accelerate your skills with guidance built around your goals.",
+  },
+];
+
+const GUARANTEES = [
+  { icon: ShieldCheckIcon, text: "Every mentor is reviewed before they appear" },
+  { icon: CalendarIcon, text: "Conflict-free scheduling, enforced in the database" },
+  { icon: VideoIcon, text: "Focused one-to-one sessions, not group calls" },
+];
 
 function HomePage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
 
-
-  const [loadingMentors, setLoadingMentors] = useState(true);
-
-
-  //I No longer using featured mentors, but keeping effect in case I need it later
-  useEffect(() => {
-    const loadMentors = async () => {
-      setLoadingMentors(true);
-      setLoadingMentors(false);
-    };
-
-
-    loadMentors();
-  }, []);
-
-
-  if (authLoading) {
-    return (
-      <div className="container">
-        <p style={{ padding: "2rem" }}>Loading...</p>
-      </div>
-    );
-  }
-
+  // The landing page is public, but searching needs an account to browse.
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const target = user ? "/browse-mentors" : "/login";
+    navigate(user ? `${target}?q=${encodeURIComponent(query)}` : target);
+  };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-      }}
-    >
-      {/* Top Bar with Auth Links */}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          // Let the auth buttons drop to their own line below ~365px instead of
-          // forcing horizontal page scroll. space-between keeps the usual
-          // left/right split at every width that fits on one line.
-          flexWrap: "wrap",
-          rowGap: "0.75rem",
-          padding: "1rem 0",
-          borderBottom: "1px solid var(--border)",
-          marginBottom: "2rem",
-        }}
-      >
-        <Link
-   to="/"
-   aria-label="MentorMatch home"
-   style={{
-     display: "inline-flex",
-     alignItems: "center",
-     gap: "0.6rem",
-     textDecoration: "none",
-   }}
->
-  {/*
-    Mark + live text rather than the horizontal lockup image: the wordmark in
-    the artwork is only ~5px tall at header scale, whereas real text stays
-    crisp at any size and can shrink on small screens. Colours are sampled
-    from src/assets/MentorMatch logo.png; the green is the darker text-safe
-    step because the artwork green only reaches 2.32:1 on white.
-  */}
-  <Logo variant="mark" height={34} />
+    <>
+      {/* ---------------------------------------------------------- Hero */}
+      <section className="hero">
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <span className="hero-eyebrow">
+              <ShieldCheckIcon width={16} height={16} />
+              Verified industry mentors
+            </span>
 
-  <span
-    style={{
-      fontWeight: 800,
-      fontSize: "1.15rem",
-      letterSpacing: "-0.02em",
-      color: "var(--logo-navy)",
-    }}
-  >
-    Mentor<span style={{ color: "var(--logo-green-text)" }}>Match</span>
-  </span>
-</Link>
-
-
-        <div style={{ display: "flex", gap: "0.75rem" }}>
-          {!user ? (
-            <>
-              <Link to="/login" className="btn btn-secondary">
-                Login
-              </Link>
-              <Link to="/register" className="btn btn-primary">
-                Register
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link to="/browse-mentors" className="btn btn-secondary">
-                Browse Mentors
-              </Link>
-              <Link
-                to={
-                  profile?.role === "Student"
-                    ? "/student-dashboard"
-                    : profile?.role === "Mentor"
-                    ? "/mentor-dashboard"
-                    : "/admin-dashboard"
-                }
-                className="btn btn-primary"
-              >
-                Dashboard
-              </Link>
-            </>
-          )}
-        </div>
-      </header>
-
-
-      {/* Main content wrapper */}
-      <div style={{ flex: 1 }}>
-        {/* 1. Hero Section with image on the right */}
-        <section
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "2rem",
-            padding: "3rem 1rem 4rem",
-            marginBottom: "2rem",
-          }}
-        >
-          {/* Left: text + search + CTAs */}
-          <div style={{ flex: 1, minWidth: "280px" }}>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "2.2rem",
-                lineHeight: 1.2,
-              }}
-            >
-              Find Your Perfect Mentor. Accelerate Your Skills.
+            <h1 className="hero-title">
+              Find Your <span className="hero-accent">Perfect Mentor</span>.
+              <br />
+              Accelerate Your Skills.
             </h1>
 
-
-            <p
-              style={{
-                marginTop: "0.75rem",
-                fontSize: "1.05rem",
-                marginBottom: "1.5rem",
-              }}
-            >
-              A secure platform for students to find mentors, view availability,
-              request mentorship sessions, and avoid booking conflicts.
+            <p className="hero-lede">
+              A secure platform for students to find mentors, view real
+              availability, request sessions, and avoid booking conflicts.
             </p>
 
+            {/* Integrated search: one bordered control, button docked inside */}
+            <form className="hero-search" onSubmit={handleSearch}>
+              <span className="hero-search-icon" aria-hidden="true">
+                <SearchIcon width={20} height={20} />
+              </span>
 
-            {/* Search Bar (UI only for now) */}
-            <div
-              style={{
-                display: "flex",
-                gap: "0.5rem",
-                maxWidth: "600px",
-                margin: "0 0 1rem",
-                flexWrap: "wrap",
-              }}
-            >
               <input
-                type="text"
+                type="search"
+                className="hero-search-input"
                 placeholder="Search by subject, industry, or skill"
-                style={{
-                  flex: 1,
-                  minWidth: "200px",
-                  padding: "0.75rem",
-                  borderRadius: "6px",
-                  border: "1px solid var(--border)",
-                }}
+                aria-label="Search mentors"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
               />
-              
-              <Link to="/browse-mentors" className="btn btn-primary">
+
+              <button type="submit" className="btn btn-primary hero-search-btn">
                 Search
-              </Link>
-            </div>
+              </button>
+            </form>
 
-
-            {/* Dual CTAs */}
-            <div
-              style={{
-                display: "flex",
-                gap: "0.75rem",
-                flexWrap: "wrap",
-              }}
-            >
-              <Link to="/browse-mentors" className="btn btn-primary">
+            <div className="hero-actions">
+              <Link to="/browse-mentors" className="btn btn-primary btn-lg">
                 Find a Mentor
+                <ArrowRightIcon width={18} height={18} />
               </Link>
-              <Link to="/apply-mentor" className="btn btn-secondary">
+              <Link to="/apply-mentor" className="btn btn-outline btn-lg">
                 Become a Mentor
               </Link>
             </div>
+
+            <ul className="hero-guarantees">
+              {GUARANTEES.map(({ icon: Icon, text }) => (
+                <li key={text}>
+                  <Icon width={16} height={16} />
+                  {text}
+                </li>
+              ))}
+            </ul>
           </div>
 
-
-          {/* Right: hero image */}
-          <div
-            style={{
-              flex: 1,
-              minWidth: "260px",
-            }}
-          >
+          {/* Image sits on a soft accent panel with a shadow so it reads as a
+              deliberate frame rather than a floating rectangle. */}
+          <div className="hero-media">
+            <div className="hero-media-accent" aria-hidden="true" />
             <img
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop"
-              alt="Students learning with mentor"
-              style={{
-                width: "100%",
-                height: "auto",
-                borderRadius: "12px",
-                objectFit: "cover",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-              }}
+              className="hero-image"
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=900&h=675&fit=crop"
+              alt="A mentor working one-to-one with a student"
+              width={900}
+              height={675}
+              loading="eager"
+              decoding="async"
             />
           </div>
-        </section>
+        </div>
+      </section>
 
+      {/* Real platform numbers. Withheld entirely while all counts are zero. */}
+      <TrustStats />
 
-        {/* About MentorMatch */}
-        <section
-          id="about"
-          style={{
-            padding: "0rem 0",
-            marginBottom: "1rem",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: "900px",
-              margin: "0 auto",
-              textAlign: "justified",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "1.6rem",
-                 borderTop: "2px solid var(--border)",
-                marginBottom: "1.5rem",
-              }}
-            >
-              About MentorMatch
-            </h2>
-
-
-            <p
-              style={{
-                fontSize: "1.05rem",
-                lineHeight: 1.7,
-                color: "var(--text)",
-              }}
-            >
-              MentorMatch is a mentorship platform that connects students with
-              experienced mentors for academic, career, and personal
-              development.
+      {/* ------------------------------------------------- How It Works */}
+      <section id="how-it-works" className="section section-alt">
+        <div className="section-inner">
+          <header className="section-head">
+            <span className="section-eyebrow">How it works</span>
+            <h2 className="section-title">Three steps to your next session</h2>
+            <p className="section-subtitle">
+              From discovery to a booked session, without the back-and-forth
+              that usually comes with finding a mentor.
             </p>
+          </header>
 
+          <ol className="steps-grid">
+            {STEPS.map(({ icon: Icon, title, body }, index) => (
+              <li className="step-card" key={title}>
+                <span className="step-index" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <span className="step-icon" aria-hidden="true">
+                  <Icon width={26} height={26} />
+                </span>
+                <h3 className="step-title">{title}</h3>
+                <p className="step-body">{body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
-            <p
-              style={{
-                fontSize: "1.05rem",
-                lineHeight: 1.7,
-                color: "var(--text)",
-              }}
-            >
-              Our goal is to make quality mentorship accessible. Students can
-              browse approved mentors, explore their skills and areas of
-              expertise, and book one-to-one mentoring sessions at times that
-              work for them.
+      {/* --------------------------------------------------------- About */}
+      <section id="about" className="section section-plain">
+        <div className="section-inner">
+          <header className="section-head">
+            <span className="section-eyebrow">About us</span>
+            <h2 className="section-title">Quality mentorship, made accessible</h2>
+            <p className="section-subtitle">
+              MentorMatch connects students with experienced mentors for
+              academic, career, and personal development.
             </p>
+          </header>
 
-
-            <p
-              style={{
-                fontSize: "1.05rem",
-                lineHeight: 1.7,
-                color: "var(--text)",
-                marginBottom: 0,
-              }}
-            >
-              Mentors can share their knowledge, guide students through
-              academic and career challenges, manage their availability, and
-              support the next generation of learners. MentorMatch helps create
-              meaningful connections where experience meets ambition 
-              supporting confidence, growth, and success.
-            </p>
-          </div>
-        </section>
-
-
-        {/* 2. How It Works with icons (no images) */}
-        <section
-          style={{
-            marginBottom: "3rem",
-            padding: "2rem 0",
-            borderTop: "1px solid var(--border)",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "1.4rem",
-              marginBottom: "1.5rem",
-              textAlign: "center",
-            }}
-          >
-            How It Works
-          </h2>
-
-
-          <div className="grid-3">
-            <div className="card" style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "2.5rem",
-                  marginBottom: "0.75rem",
-                }}
-              >
-                🔎
-              </div>
-              <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.1rem" }}>
-                1. Choose an expert
-              </h3>
-              <p style={{ fontSize: "0.95rem" }}>
-                Browse verified mentors by subject, industry, and availability.
+          <div className="about-grid">
+            <div className="about-card">
+              <h3 className="about-card-title">For students</h3>
+              <p>
+                Browse approved mentors, explore their skills and expertise, and
+                book one-to-one sessions at times that work for you. Every
+                booking is checked against the mentor's calendar, so a slot you
+                request is never silently double-booked.
               </p>
             </div>
 
-
-            <div className="card" style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "2.5rem",
-                  marginBottom: "0.75rem",
-                }}
-              >
-                📅
-              </div>
-              <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.1rem" }}>
-                2. Pick a date & time
-              </h3>
-              <p style={{ fontSize: "0.95rem" }}>
-                Select a slot that matches the mentor’s availability.
+            <div className="about-card">
+              <h3 className="about-card-title">For mentors</h3>
+              <p>
+                Share what you know, guide students through academic and career
+                challenges, and manage your own weekly availability. You decide
+                which requests to accept.
               </p>
             </div>
 
-
-            <div className="card" style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "2.5rem",
-                  marginBottom: "0.75rem",
-                }}
-              >
-                💬🎓
-              </div>
-              <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.1rem" }}>
-                3. Connect 1-on-1
-              </h3>
-              <p style={{ fontSize: "0.95rem" }}>
-                Meet online and accelerate your skills with personalized guidance.
+            <div className="about-card">
+              <h3 className="about-card-title">Why we built it</h3>
+              <p>
+                Meaningful connections happen where experience meets ambition.
+                MentorMatch exists to make those connections easy to find and
+                reliable to keep.
               </p>
             </div>
           </div>
-        </section>
-      </div>
 
+          {!user && (
+            <div className="about-cta">
+              <Link to="/register" className="btn btn-primary btn-lg">
+                Create your free account
+                <ArrowRightIcon width={18} height={18} />
+              </Link>
+              <p>
+                Already registered as a mentor?{" "}
+                <Link to="/login" className="text-link">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          )}
 
-      {/* Footer */}
-      <footer
-        style={{
-          borderTop: "1px solid var(--border)",
-          padding: "1.5rem 0",
-          textAlign: "center",
-          fontSize: "0.9rem",
-          marginTop: "2rem",
-        }}
-      >
-        <div style={{ marginBottom: "0.5rem" }}>
-          © {new Date().getFullYear()} MentorMatch By Ajobe Dev. All rights reserved.
+          {user && profile?.role === "Student" && (
+            <div className="about-cta">
+              <Link to="/browse-mentors" className="btn btn-primary btn-lg">
+                Browse mentors
+                <ArrowRightIcon width={18} height={18} />
+              </Link>
+            </div>
+          )}
         </div>
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-          
-          <a href="rashida2harun@gmail.com" style={{ color: "inherit" }}>
-            Contact
-          </a>
-        </div>
-      </footer>
-    </div>
+      </section>
+    </>
   );
 }
-
 
 export default HomePage;

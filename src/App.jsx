@@ -3,6 +3,11 @@ import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
+import FaqPage from "./pages/FaqPage";
+import ContactPage from "./pages/ContactPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
+import MarketingLayout from "./components/MarketingLayout";
 import StudentDashboard from "./pages/StudentDashboard";
 import ApplyMentorPage from "./pages/ApplyMentorPage";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -18,9 +23,17 @@ import MentorEditProfilePage from "./pages/MentorEditProfilePage";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      {/* Public marketing pages share the site header/footer and the in-page
+          hash scrolling that NavLink alone does not provide. */}
+      <Route element={<MarketingLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+      </Route>
 
 <Route
   path="/admin-dashboard"

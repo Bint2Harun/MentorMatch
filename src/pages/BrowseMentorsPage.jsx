@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
@@ -18,6 +18,10 @@ function BrowseMentorsPage() {
   const [faculties, setFaculties] = useState([]);
   const [page, setPage] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
+
+  // Search term handed over from the landing page hero (?q=...).
+  const [searchParams] = useSearchParams();
+  const searchQuery = (searchParams.get("q") ?? "").trim();
 
   // Faculty list comes from expertise_categories rather than from the mentors
   // on screen: once filtering happens in SQL the visible rows no longer contain
@@ -53,6 +57,7 @@ function BrowseMentorsPage() {
       // this page used to normalise by hand.
       const { data, error } = await supabase.rpc("search_mentors", {
         p_faculty: selectedFaculty === "All" ? null : selectedFaculty,
+        p_query: searchQuery || null,
         p_limit: PAGE_SIZE + 1,
         p_offset: page * PAGE_SIZE,
       });
@@ -94,7 +99,7 @@ function BrowseMentorsPage() {
     };
 
     loadMentors();
-  }, [selectedFaculty, page]);
+  }, [selectedFaculty, page, searchQuery]);
 
   // Changing the faculty invalidates the current offset.
   const handleFacultyChange = (faculty) => {
@@ -180,13 +185,21 @@ function BrowseMentorsPage() {
           </select>
         </div>
 
-        <p className="browse-mentors-count">
-          {mentors.length === 0
-            ? "No mentors on this page"
-            : `Showing ${page * PAGE_SIZE + 1}-${
-                page * PAGE_SIZE + mentors.length
-              }`}
-        </p>
+        <div>
+          {searchQuery && (
+            <p className="browse-mentors-search-note">
+              Results for <strong>&ldquo;{searchQuery}&rdquo;</strong>
+            </p>
+          )}
+
+          <p className="browse-mentors-count">
+            {mentors.length === 0
+              ? "No mentors on this page"
+              : `Showing ${page * PAGE_SIZE + 1}-${
+                  page * PAGE_SIZE + mentors.length
+                }`}
+          </p>
+        </div>
       </section>
 
       {/* Error State */}
