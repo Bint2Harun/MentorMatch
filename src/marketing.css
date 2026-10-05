@@ -844,8 +844,11 @@
   }
 }
 
-@media (max-width: 860px) {
-  /* Nav wraps to its own row rather than being squeezed. */
+@media (max-width: 980px) {
+  /* Nav wraps to its own row rather than being squeezed.
+     Breakpoint is ~980px, not 860px: the brand + nav + auth row needs about
+     942px before it overflows, so wrapping any later left a dead band where
+     the header pushed the page sideways. */
   .site-header-inner {
     flex-wrap: wrap;
     row-gap: 0.75rem;
@@ -938,5 +941,375 @@
 
   .step-card:hover {
     transform: none;
+  }
+}
+/* =========================================================
+   AUTH PAGES (login / register / password reset)
+   ------------------------------------------------------------
+   These sit inside MarketingLayout, which already renders the
+   header, footer and bottom-anchored flex column. So these
+   rules must NOT set min-height or their own page background -
+   doing so was what pushed the footer below the fold and made
+   the card appear to overlap the promo column.
+   ========================================================= */
+
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 5vw, 3.5rem) 1.25rem;
+}
+
+.auth-layout {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+
+/* ------------------------------------------------------- Promo side */
+
+.auth-promo {
+  min-width: 0;
+}
+
+.auth-title {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 3.6vw, 2.7rem);
+  line-height: 1.14;
+  letter-spacing: -0.035em;
+  font-weight: 900;
+  color: #111827;
+}
+
+.auth-lede {
+  margin: 0;
+  max-width: 30rem;
+  font-size: 1.08rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+/* Uniform badges: one neutral fill, one border, one alignment. */
+.auth-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--logo-navy);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.auth-pill svg {
+  color: var(--logo-green-text);
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------- Form card */
+
+.auth-card {
+  width: 100%;
+  padding: 2rem;
+  border: 1px solid #e9eef4;
+  border-radius: 16px;
+  background: #ffffff;
+  /* shadow-lg equivalent */
+  box-shadow:
+    0 18px 40px -12px rgba(16, 24, 40, 0.16),
+    0 4px 10px -4px rgba(16, 24, 40, 0.06);
+}
+
+.auth-card-head {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-card-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+.auth-card-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------- Form fields */
+
+.auth-field {
+  margin-bottom: 1rem;
+}
+
+.auth-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.auth-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--logo-navy);
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.auth-input::placeholder {
+  color: #9aa5b4;
+}
+
+.auth-input:focus {
+  border-color: var(--logo-green-text);
+  box-shadow: 0 0 0 4px rgba(10, 194, 127, 0.16);
+}
+
+/* Password row: label + forgot link share one line. */
+.auth-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.auth-label-row .auth-label {
+  margin-bottom: 0;
+}
+
+/* Wrapper lets the eye button sit inside the field. */
+.auth-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-password-wrap .auth-input {
+  padding-right: 3rem;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease;
+}
+
+.auth-password-toggle:hover {
+  color: var(--logo-green-text);
+  background: var(--page-bg);
+}
+
+.auth-password-toggle:focus-visible {
+  outline: 2px solid var(--logo-green-text);
+  outline-offset: 1px;
+}
+
+.auth-forgot {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--logo-green-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.auth-forgot:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-error {
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.auth-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #a7e3c5;
+  border-radius: 9px;
+  background: #e8f8ef;
+  color: #0b6b3f;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.auth-success svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* --------------------------------------------------------- Buttons */
+
+.auth-submit {
+  width: 100%;
+}
+
+.site-shell .auth-submit[disabled] {
+  background: #8fae9f;
+  border-color: #8fae9f;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+.auth-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #374151;
+  font: inherit;
+  font-size: 0.97rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.auth-oauth:hover {
+  background: var(--page-bg);
+  border-color: #cbd5e1;
+}
+
+.auth-oauth:focus-visible {
+  outline: 2px solid var(--logo-green-text);
+  outline-offset: 2px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 1.35rem 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+
+/* ------------------------------------------------- Card footer bits */
+
+.auth-rule {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.auth-foot {
+  text-align: center;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1.15rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.auth-back:hover {
+  color: var(--logo-green-text);
+}
+
+/* ------------------------------------------------------ Responsive */
+
+@media (max-width: 900px) {
+  /* Single column. The form is ordered first so the fields are reachable
+     without scrolling past the headline, which stacked content pushed the
+     login card below the fold on phones. */
+  .auth-layout {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+    gap: 2rem;
+  }
+
+  .auth-card {
+    order: 1;
+  }
+
+  .auth-promo {
+    order: 2;
+  }
+
+  .auth-lede {
+    max-width: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .auth-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .auth-label-row {
+    flex-wrap: wrap;
+    gap: 0.25rem;
   }
 }

@@ -119,3 +119,79 @@ export default {
   VideoIcon,
   MailIcon,
 };
+/* --------------------------------------------------------- Auth pages */
+
+export function EyeIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M10.6 6.1A8.9 8.9 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.8 3.6" />
+      <path d="M6.2 7.6A16 16 0 0 0 2.5 12S6 18 12 18a9.2 9.2 0 0 0 3.3-.6" />
+      <path d="m10 10.1a3 3 0 0 0 4.1 4.1" />
+      <path d="m4 4 16 16" />
+    </svg>
+  );
+}
+
+/**
+ * Google brand mark. Uses official multi-colour paths rather than
+ * `currentColor` so the recognisable four-colour logo is preserved; the button
+ * label and border still carry the brand font colour.
+ */
+export function GoogleIcon(props) {
+  const { width, height, ...rest } = props;
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={width ?? 20}
+      height={height ?? 20}
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      {...rest}
+    >
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.46a5.53 5.53 0 0 1-2.4 3.63v3.01h3.88c2.27-2.09 3.58-5.17 3.58-8.82Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.08 7.94-2.91l-3.88-3.01c-1.07.72-2.44 1.15-4.06 1.15-3.13 0-5.78-2.11-6.73-4.95H1.25v3.11A12 12 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.28a7.2 7.2 0 0 1 0-4.56V6.61H1.25a12 12 0 0 0 0 10.78l4.02-3.11Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.25 6.61l4.02 3.11C6.22 6.88 8.87 4.77 12 4.77Z"
+      />
+    </svg>
+  );
+}
+
+export function ArrowLeftIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M19 12H5" />
+      <path d="m11 6-6 6 6 6" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.5 12 2.5 2.5 4.5-5" />
+    </svg>
+  );
+}

@@ -86,6 +86,56 @@ export function AuthProvider({ children }) {
     return { data, error };
   };
 
+  /**
+   * OAuth entry point (e.g. Google).
+   *
+   * Returns us to /login so the existing role router performs the redirect.
+   * Supabase drops the tokens into the URL fragment, onAuthStateChange picks up
+   * the session, and the page's effect sends the user to the right dashboard.
+   *
+   * REQUIRES: the provider enabled in Supabase -> Authentication -> Providers,
+   * and this URL added to Authentication -> URL Configuration -> Redirect URLs.
+   * Also requires the handle_new_user trigger from migration 0002 so an OAuth
+   * user gets a profiles row; without it they sign in with no profile and are
+   * bounced back to the home page.
+   */
+  const signInWithOAuth = async ({ provider }) => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/login`
+      }
+    });
+
+    return { data, error };
+  };
+
+  /**
+   * Sends the password reset email.
+   *
+   * REQUIRES working SMTP. Supabase's built-in SMTP only delivers to project
+   * team members and is heavily rate limited, so real users will not receive
+   * the mail until custom SMTP is configured. Also requires this redirect URL
+   * whitelisted under Authentication -> URL Configuration.
+   */
+  const sendPasswordReset = async ({ email }) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+
+    return { data, error };
+  };
+
+  /**
+   * Completes a password reset. Only valid while the user holds a recovery
+   * session, which Supabase creates from the emailed link.
+   */
+  const updatePassword = async ({ password }) => {
+    const { data, error } = await supabase.auth.updateUser({ password });
+
+    return { data, error };
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     return { error };
@@ -100,6 +150,9 @@ export function AuthProvider({ children }) {
         loading,
         signUp,
         signIn,
+        signInWithOAuth,
+        sendPasswordReset,
+        updatePassword,
         signOut,
         fetchProfile
       }}
