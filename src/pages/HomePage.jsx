@@ -47,32 +47,44 @@ function HomePage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          // Let the auth buttons drop to their own line below ~365px instead of
+          // forcing horizontal page scroll. space-between keeps the usual
+          // left/right split at every width that fits on one line.
+          flexWrap: "wrap",
+          rowGap: "0.75rem",
           padding: "1rem 0",
           borderBottom: "1px solid var(--border)",
           marginBottom: "2rem",
         }}
       >
-       <Link
-  to="/"
-  aria-label="MentorMatch home"
-  style={{
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "0.55rem",
-    textDecoration: "none",
-  }}
+        <Link
+   to="/"
+   aria-label="MentorMatch home"
+   style={{
+     display: "inline-flex",
+     alignItems: "center",
+     gap: "0.6rem",
+     textDecoration: "none",
+   }}
 >
-  <Logo />
+  {/*
+    Mark + live text rather than the horizontal lockup image: the wordmark in
+    the artwork is only ~5px tall at header scale, whereas real text stays
+    crisp at any size and can shrink on small screens. Colours are sampled
+    from src/assets/MentorMatch logo.png; the green is the darker text-safe
+    step because the artwork green only reaches 2.32:1 on white.
+  */}
+  <Logo variant="mark" height={34} />
 
   <span
     style={{
       fontWeight: 800,
       fontSize: "1.15rem",
       letterSpacing: "-0.02em",
+      color: "var(--logo-navy)",
     }}
   >
-    <span style={{ color: "#1d4ed8" }}>Mentor</span>
-    <span style={{ color: "#000000" }}>Match</span>
+    Mentor<span style={{ color: "var(--logo-green-text)" }}>Match</span>
   </span>
 </Link>
 

@@ -1,41 +1,39 @@
-function Logo() {
+import logoLockup from "../assets/mentormatch-logo.png";
+import markOnly from "../assets/mentormatch-mark.png";
+
+/**
+ * Brand logo.
+ *
+ * `variant="full"`    icon mark + wordmark. Use in headers and the home hero.
+ * `variant="mark"`    icon mark only. Use where the wordmark is already
+ *                      present in adjacent text, or in tight spaces.
+ *
+ * Both come from src/assets/MentorMatch logo.png via Vite, so the URLs are
+ * fingerprinted in a production build.
+ */
+function Logo({
+  variant = "full",
+  height = 40,
+  className,
+  ...rest
+}) {
+  const src = variant === "mark" ? markOnly : logoLockup;
+
+  // The lockup is wider than it is tall; the mark is roughly 1.48:1.
+  const width =
+    variant === "mark" ? Math.round(height * 1.479) : "auto";
+
   return (
-    <svg
-      role="img"
-      aria-labelledby="mentormatch-logo-title"
-      width="36"
-      height="36"
-      viewBox="0 0 36 36"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <title id="mentormatch-logo-title">MentorMatch logo</title>
-
-      <rect width="36" height="36" rx="10" fill="#df8015" />
-
-      <path
-        d="M10 24V12l4 6 4-6v12"
-        stroke="#ffffff"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      <circle
-        cx="25"
-        cy="17"
-        r="4.5"
-        stroke="#ffffff"
-        strokeWidth="2.4"
-      />
-
-      <path
-        d="M25 21.5V24"
-        stroke="#ffffff"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
+    <img
+      src={src}
+      alt="MentorMatch"
+      height={height}
+      width={width}
+      className={className}
+      style={{ display: "block", width, height: "auto" }}
+      decoding="async"
+      {...rest}
+    />
   );
 }
 

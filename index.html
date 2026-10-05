@@ -2,9 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mentor-booking</title>
+
+    <title>MentorMatch — Book a session with a verified mentor</title>
+    <meta
+      name="description"
+      content="MentorMatch connects students with verified industry mentors. Browse expertise areas, request a session, and meet over video."
+    />
+    <meta name="theme-color" content="#1dbf73" />
+
+    <!-- Favicon: ICO first for legacy, then explicit PNGs. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!--
+      No <link rel="preload"> for the header logo: Vite fingerprints bundled
+      assets, so a hard-coded /src/assets path would 404 in a production build.
+      Importing it from JSX lets the bundler emit the correct hashed URL.
+    -->
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MentorMatch" />
+    <meta
+      property="og:title"
+      content="MentorMatch — Book a session with a verified mentor"
+    />
+    <meta
+      property="og:description"
+      content="Connect with verified industry mentors and book a session."
+    />
+    <meta property="og:image" content="/android-chrome-512x512.png" />
+    <meta name="twitter:card" content="summary" />
   </head>
   <body>
     <div id="root"></div>

@@ -3,6 +3,15 @@
 ========================= */
 
 :root {
+  /* Sampled from src/assets/MentorMatch logo.png. Separate from --brand-green
+     so branding the logo does not restyle existing UI. */
+  --logo-navy: #0b1c32;
+  --logo-green: #0ac27f;
+  /* The logo green (#0ac27f) is only 2.32:1 on white and cannot be used for
+     text. This darker step of the same hue reaches 4.64:1 (WCAG AA). Logo
+     artwork keeps #0ac27f; live text must use this. */
+  --logo-green-text: #07864e;
+
   --brand-green: #1dbf73;
   --brand-green-dark: #149557;
   --brand-green-light: #e8f8ef;
