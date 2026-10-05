@@ -1,0 +1,26 @@
+/*
+ * Single stylesheet entry point.
+ *
+ * Cascade layer order is the load-bearing part of this file.
+ *
+ * `index.css` is the legacy stylesheet. It styles dashboards through bare
+ * element selectors (`h1`, `label`, `a`, `input`, ...), which are unlayered and
+ * therefore beat *every* layered rule regardless of specificity. Left as-is,
+ * that silently defeats Tailwind utilities on the public pages: `h1` would
+ * render with `index.css`'s heading colour even in dark mode, because
+ * `dark:text-white` sits in `@layer utilities` and unlayered rules win.
+ *
+ * So `index.css` is imported into the lowest layer, below Tailwind's own
+ * `theme`/`base`/`components`/`utilities`. Consequences:
+ *
+ *   - Public pages: Tailwind utilities now win over `index.css` element
+ *     defaults, including the `dark:` variants.
+ *   - Dashboards: unchanged. They use no Tailwind utility classes, so nothing
+ *     reorders for them, and `index.css` still beats Tailwind's preflight
+ *     because it is lower in the layer order.
+ */
+
+@layer legacy, theme, base, components, utilities;
+
+@import "./index.css" layer(legacy);
+@import "./marketing-tw.css";

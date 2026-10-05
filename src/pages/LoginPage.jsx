@@ -2,6 +2,29 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
+  authBack,
+  authCard,
+  authCardSub,
+  authCardTitle,
+  authDivider,
+  authFoot,
+  authInput,
+  authLabel,
+  authLayout,
+  authLede,
+  authOauth,
+  authPage,
+  authPasswordToggle,
+  authPasswordWrap,
+  authPills,
+  authPromo,
+  authRule,
+  authSubmit,
+  authTitle,
+  pill,
+  textLink,
+} from "../components/marketing-ui";
+import {
   CheckCircleIcon,
   EyeIcon,
   EyeOffIcon,
@@ -78,40 +101,45 @@ function LoginPage() {
     // Rendered inside MarketingLayout, which owns the header, footer and the
     // bottom-anchored flex column. A nested <main> or a min-height here would
     // double up the landmark and push the footer out of view.
-    <div className="auth-page">
-      <div className="auth-layout">
-        {/* ------------------------------------------------ Promo side */}
-        <section className="auth-promo">
-          <h1 className="auth-title">Learn faster with the right guidance.</h1>
+    <div className={authPage}>
+      <div className={authLayout}>
+        {/* Promo side. `order-first` is implicit: it is the first child, so on
+            narrow screens the pitch stacks above the form. */}
+        <section className={authPromo}>
+          <h1 className={authTitle}>Learn faster with the right guidance.</h1>
 
-          <p className="auth-lede">
+          <p className={authLede}>
             MentorMatch connects students with experienced mentors for academic,
             career, and personal development. Book mentoring sessions and grow
             with personalised guidance.
           </p>
 
-          <ul className="auth-pills">
-            {PILLS.map((pill) => (
-              <li className="auth-pill" key={pill}>
-                <CheckCircleIcon width={15} height={15} />
-                {pill}
+          <ul className={authPills}>
+            {PILLS.map((item) => (
+              <li key={item} className={pill}>
+                <CheckCircleIcon
+                  width={15}
+                  height={15}
+                  className="text-brand-600 dark:text-brand-400"
+                />
+                {item}
               </li>
             ))}
           </ul>
         </section>
 
         {/* ------------------------------------------------- Login card */}
-        <section className="auth-card" aria-label="Login form">
-          <div className="auth-card-head">
-            <h2 className="auth-card-title">Welcome back</h2>
-            <p className="auth-card-sub">
+        <section className={authCard} aria-label="Login form">
+          <div>
+            <h2 className={authCardTitle}>Welcome back</h2>
+            <p className={authCardSub}>
               Log in to continue to your MentorMatch account.
             </p>
           </div>
 
           <button
             type="button"
-            className="auth-oauth"
+            className={authOauth}
             onClick={handleOAuth}
             disabled={oauthBusy}
           >
@@ -119,11 +147,11 @@ function LoginPage() {
             {oauthBusy ? "Opening Google..." : "Continue with Google"}
           </button>
 
-          <p className="auth-divider">or</p>
+          <p className={authDivider}>or</p>
 
           <form onSubmit={handleSubmit}>
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="email">
+            <div className="mb-4">
+              <label className={authLabel} htmlFor="email">
                 Email address
               </label>
 
@@ -131,7 +159,7 @@ function LoginPage() {
                 id="email"
                 name="email"
                 type="email"
-                className="auth-input"
+                className={authInput}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="example@email.com"
@@ -139,22 +167,22 @@ function LoginPage() {
               />
             </div>
 
-            <div className="auth-field">
-              <div className="auth-label-row">
-                <label className="auth-label" htmlFor="password">
+            <div className="mb-4">
+              <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                <label className={authLabel} htmlFor="password">
                   Password
                 </label>
-                <Link to="/forgot-password" className="auth-forgot">
+                <Link to="/forgot-password" className="text-[0.88rem] font-semibold text-brand-600 no-underline hover:underline hover:underline-offset-[3px] dark:text-brand-400">
                   Forgot password?
                 </Link>
               </div>
 
-              <div className="auth-password-wrap">
+              <div className={authPasswordWrap}>
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  className="auth-input"
+                  className={authInput}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter your password"
@@ -163,7 +191,7 @@ function LoginPage() {
 
                 <button
                   type="button"
-                  className="auth-password-toggle"
+                  className={authPasswordToggle}
                   onClick={() => setShowPassword((visible) => !visible)}
                   aria-label={
                     showPassword ? "Hide password" : "Show password"
@@ -180,30 +208,30 @@ function LoginPage() {
             </div>
 
             {errorMessage && (
-              <div className="auth-error" role="alert">
+              <div className={authError} role="alert">
                 {errorMessage}
               </div>
             )}
 
             <button
               type="submit"
-              className="btn btn-primary auth-submit"
+              className={authSubmit}
               disabled={submitting}
             >
               {submitting ? "Logging in..." : "Log In"}
             </button>
           </form>
 
-          <hr className="auth-rule" />
+          <hr className={authRule} />
 
-          <p className="auth-foot">
+          <p className={authFoot}>
             New to MentorMatch?{" "}
-            <Link to="/register" className="text-link">
+            <Link to="/register" className={textLink}>
               Create an account
             </Link>
           </p>
 
-          <Link to="/" className="auth-back">
+          <Link to="/" className={authBack}>
             <ArrowLeftIcon width={15} height={15} />
             Back to home
           </Link>

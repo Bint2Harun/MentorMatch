@@ -38,7 +38,7 @@ function TrustStats() {
           setStats(row ?? null);
         }
       } finally {
-        if (!cancelled) setLoaded(true);
+        if (cancelled) setLoaded(true);
       }
     };
 
@@ -81,23 +81,32 @@ function TrustStats() {
   if (metrics.length === 0) return null;
 
   return (
-    <section className="trust-stats" aria-label="MentorMatch platform activity">
-      <div className="trust-stats-inner">
+    <section
+      className="border-y border-[var(--hairline)] bg-[var(--surface-muted)]"
+      aria-label="MentorMatch platform activity"
+    >
+      <ul className="mx-auto flex w-full max-w-[1180px] flex-wrap list-none items-center justify-center gap-x-10 gap-y-5 px-5 py-7 p-0 sm:justify-between">
         {metrics.map(({ icon: Icon, value, label, note }) => (
-          <div className="trust-stat" key={label}>
-            <span className="trust-stat-icon">
+          <li key={label} className="flex items-center gap-3">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300">
               <Icon width={22} height={22} />
             </span>
-            <span className="trust-stat-body">
-              <span className="trust-stat-value">
+            <span className="flex flex-col">
+              <span className="text-[1.35rem] leading-tight font-black tracking-[-0.02em] text-ink-900 dark:text-white">
                 {numberFormat.format(value)}
               </span>
-              <span className="trust-stat-label">{label}</span>
-              {note && <span className="trust-stat-note">{note}</span>}
+              <span className="text-[0.88rem] text-ink-500 dark:text-ink-300">
+                {label}
+              </span>
+              {note && (
+                <span className="text-[0.78rem] text-ink-400 dark:text-ink-500">
+                  {note}
+                </span>
+              )}
             </span>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

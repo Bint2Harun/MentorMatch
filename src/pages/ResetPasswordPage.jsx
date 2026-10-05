@@ -2,6 +2,25 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
+  authBack,
+  authCard,
+  authCardSub,
+  authCardTitle,
+  authError,
+  authInput,
+  authLabel,
+  authLayout,
+  authLede,
+  authPage,
+  authPasswordToggle,
+  authPasswordWrap,
+  authPromo,
+  authRule,
+  authSubmit,
+  authSuccess,
+  authTitle,
+} from "../components/marketing-ui";
+import {
   CheckCircleIcon,
   ArrowLeftIcon,
   EyeIcon,
@@ -56,35 +75,34 @@ function ResetPasswordPage() {
   // looks expired while Supabase is still exchanging the token.
   if (!loading && !session && !done) {
     return (
-      <div className="auth-page">
-        <div className="auth-layout">
-          <section className="auth-promo">
-            <h1 className="auth-title">Reset link no longer valid</h1>
-            <p className="auth-lede">
+      <div className={authPage}>
+        <div className={authLayout}>
+          <section className={authPromo}>
+            <h1 className={authTitle}>Reset link no longer valid</h1>
+            <p className={authLede}>
               Password reset links are single use and expire after a short
               while. Request a fresh link and try again.
             </p>
           </section>
 
-          <section className="auth-card" aria-label="Reset link expired">
-            <div className="auth-card-head">
-              <h2 className="auth-card-title">Link expired</h2>
-              <p className="auth-card-sub">
+          <section className={authCard} aria-label="Reset link expired">
+            <div>
+              <h2 className={authCardTitle}>Link expired</h2>
+              <p className={authCardSub}>
                 We could not find an active reset session on this device.
               </p>
             </div>
 
             <Link
               to="/forgot-password"
-              className="btn btn-primary auth-submit"
-              style={{ textAlign: "center" }}
+              className={authSubmit}
             >
               Request a new link
             </Link>
 
-            <hr className="auth-rule" />
+            <hr className={authRule} />
 
-            <Link to="/login" className="auth-back">
+            <Link to="/login" className={authBack}>
               <ArrowLeftIcon width={15} height={15} />
               Back to log in
             </Link>
@@ -95,25 +113,25 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-layout">
-        <section className="auth-promo">
-          <h1 className="auth-title">Choose a new password</h1>
-          <p className="auth-lede">
+    <div className={authPage}>
+      <div className={authLayout}>
+        <section className={authPromo}>
+          <h1 className={authTitle}>Choose a new password</h1>
+          <p className={authLede}>
             Pick something you have not used before. You will be signed in
             automatically once it is changed.
           </p>
         </section>
 
-        <section className="auth-card" aria-label="Set a new password">
-          <div className="auth-card-head">
-            <h2 className="auth-card-title">Set a new password</h2>
-            <p className="auth-card-sub">At least 6 characters.</p>
+        <section className={authCard} aria-label="Set a new password">
+          <div>
+            <h2 className={authCardTitle}>Set a new password</h2>
+            <p className={authCardSub}>At least 6 characters.</p>
           </div>
 
           {done ? (
             <>
-              <div className="auth-success" role="status">
+              <div className={authSuccess} role="status">
                 <CheckCircleIcon width={18} height={18} />
                 <span>
                   Your password has been updated. You can continue to your
@@ -123,25 +141,24 @@ function ResetPasswordPage() {
 
               <Link
                 to="/student-dashboard"
-                className="btn btn-primary auth-submit"
-                style={{ textAlign: "center" }}
+                className={authSubmit}
               >
                 Go to dashboard
               </Link>
             </>
           ) : (
             <form onSubmit={handleSubmit}>
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="new-password">
+              <div className="mb-4">
+                <label className={authLabel} htmlFor="new-password">
                   New password
                 </label>
 
-                <div className="auth-password-wrap">
+                <div className={authPasswordWrap}>
                   <input
                     id="new-password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    className="auth-input"
+                    className={authInput}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Enter a new password"
@@ -150,7 +167,7 @@ function ResetPasswordPage() {
 
                   <button
                     type="button"
-                    className="auth-password-toggle"
+                    className={authPasswordToggle}
                     onClick={() => setShowPassword((visible) => !visible)}
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
@@ -166,8 +183,8 @@ function ResetPasswordPage() {
                 </div>
               </div>
 
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="confirm-password">
+              <div className="mb-4">
+                <label className={authLabel} htmlFor="confirm-password">
                   Confirm new password
                 </label>
 
@@ -175,7 +192,7 @@ function ResetPasswordPage() {
                   id="confirm-password"
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
-                  className="auth-input"
+                  className={authInput}
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   placeholder="Repeat the new password"
@@ -184,14 +201,14 @@ function ResetPasswordPage() {
               </div>
 
               {errorMessage && (
-                <div className="auth-error" role="alert">
+                <div className={authError} role="alert">
                   {errorMessage}
                 </div>
               )}
 
               <button
                 type="submit"
-                className="btn btn-primary auth-submit"
+                className={authSubmit}
                 disabled={submitting}
               >
                 {submitting ? "Updating..." : "Update password"}
@@ -199,9 +216,9 @@ function ResetPasswordPage() {
             </form>
           )}
 
-          <hr className="auth-rule" />
+          <hr className={authRule} />
 
-          <Link to="/login" className="auth-back">
+          <Link to="/login" className={authBack}>
             <ArrowLeftIcon width={15} height={15} />
             Back to log in
           </Link>

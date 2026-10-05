@@ -1,4 +1,12 @@
 import { Link } from "react-router-dom";
+import {
+  btnPrimary,
+  eyebrow,
+  sectionInner,
+  sectionSubtitle,
+  sectionTitle,
+  sectionWrap,
+} from "../components/marketing-ui";
 
 const FAQS = [
   {
@@ -30,30 +38,58 @@ const FAQS = [
 function FaqPage() {
   return (
     <>
-      <section className="page-hero">
-        <div className="section-inner">
-          <span className="section-eyebrow">Pricing & FAQ</span>
-          <h1 className="section-title">Questions, answered</h1>
-          <p className="section-subtitle">
+      <section className={`${sectionWrap} pb-8`}>
+        <div className={sectionInner}>
+          <span className={eyebrow}>Pricing & FAQ</span>
+          <h1 className={sectionTitle}>Questions, answered</h1>
+          <p className={sectionSubtitle}>
             Everything below reflects how MentorMatch currently works.
           </p>
         </div>
       </section>
 
-      <section className="section section-plain" id="help">
-        <div className="section-inner section-inner-narrow">
-          <div className="faq-list">
+      <section id="help" className={`${sectionWrap} pt-0`}>
+        <div className={`${sectionInner} max-w-[46rem]`}>
+          <div className="grid gap-3">
             {FAQS.map(({ q, a }) => (
-              <details className="faq-item" key={q}>
-                <summary className="faq-question">{q}</summary>
-                <p className="faq-answer">{a}</p>
+              <details
+                key={q}
+                className="group rounded-xl border border-[var(--hairline)] bg-[var(--surface)] px-5 py-4 [&_summary::-webkit-details-marker]:hidden"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[1.03rem] font-bold text-ink-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-white">
+                  {q}
+                  {/* Chevron rotates with the open state; the visual affordance
+                      is the ::after marker in most browsers, so this replaces it. */}
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={20}
+                    height={20}
+                    aria-hidden="true"
+                    focusable="false"
+                    className="shrink-0 text-ink-400 transition-transform group-open:rotate-180"
+                  >
+                    <path
+                      d="m6 9 6 6 6-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </summary>
+                <p className="mt-3 text-[0.99rem] leading-[1.7] text-ink-500 dark:text-ink-300">
+                  {a}
+                </p>
               </details>
             ))}
           </div>
 
-          <div className="page-cta">
-            <p>Still stuck? We would rather answer than leave you guessing.</p>
-            <Link to="/contact" className="btn btn-primary">
+          <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl border border-[var(--hairline)] bg-[var(--surface-muted)] px-6 py-8 text-center">
+            <p className="text-[1rem] text-ink-600 dark:text-ink-300">
+              Still stuck? We would rather answer than leave you guessing.
+            </p>
+            <Link to="/contact" className={btnPrimary}>
               Contact support
             </Link>
           </div>

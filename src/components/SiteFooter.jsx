@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
-import { MailIcon } from "./Icons";
+import { MailIcon } from "../components/Icons";
 
 const COLUMNS = [
   {
@@ -55,37 +55,44 @@ const SOCIALS = [
  */
 function SiteFooter() {
   return (
-    <footer className="site-footer">
-      <div className="site-footer-inner">
+    // mt-auto pins the footer to the bottom when the page is short.
+    <footer className="mt-auto bg-logo-navy text-ink-300">
+      <div className="mx-auto grid w-full max-w-[1180px] grid-cols-1 gap-10 px-5 py-12 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] lg:gap-10 lg:py-16">
         {/* Column 1: brand + mission + socials */}
-        <div className="site-footer-brand">
+        <div>
           <Link
             to="/"
             aria-label="MentorMatch home"
-            className="site-brand site-brand-footer"
+            className="inline-flex items-center gap-2.5 no-underline"
           >
             <Logo variant="mark" height={34} />
-            <span className="site-brand-word">
-              Mentor<span className="site-brand-accent">Match</span>
+            <span className="text-[1.3rem] leading-none font-black tracking-[-0.035em] text-white">
+              Mentor<span className="text-brand-400">Match</span>
             </span>
           </Link>
 
-          <p className="site-footer-mission">
+          <p className="mt-4 mb-5 max-w-[26rem] text-[0.94rem] leading-[1.65] text-ink-400">
             Connecting students with verified industry mentors for focused,
             one-to-one guidance that moves careers forward.
           </p>
 
-          <ul className="site-footer-socials">
+          <ul className="mb-4 flex gap-2.5 p-0">
             {SOCIALS.map((social) => (
               <li key={social.label}>
                 <a
                   href={social.href}
-                  className="site-footer-social"
                   aria-label={social.label}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="inline-flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-white/15 text-ink-300 transition-colors hover:border-brand-400/45 hover:bg-brand-500/20 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={18}
+                    height={18}
+                    aria-hidden="true"
+                    focusable="false"
+                  >
                     <path d={social.path} fill="currentColor" />
                   </svg>
                 </a>
@@ -94,7 +101,7 @@ function SiteFooter() {
           </ul>
 
           <a
-            className="site-footer-email"
+            className="inline-flex items-center gap-2 text-[0.88rem] break-all text-ink-400 no-underline transition-colors hover:text-white"
             href="mailto:rashida2harun@gmail.com"
           >
             <MailIcon width={16} height={16} />
@@ -104,16 +111,17 @@ function SiteFooter() {
 
         {/* Columns 2-4 */}
         {COLUMNS.map((column) => (
-          <nav
-            key={column.heading}
-            className="site-footer-column"
-            aria-label={column.heading}
-          >
-            <h2 className="site-footer-heading">{column.heading}</h2>
-            <ul>
+          <nav key={column.heading} aria-label={column.heading}>
+            <h2 className="mb-4 text-[0.8rem] font-extrabold tracking-[0.09em] text-white uppercase">
+              {column.heading}
+            </h2>
+            <ul className="grid gap-2.5 p-0">
               {column.links.map((link) => (
                 <li key={link.label}>
-                  <Link to={link.to} className="site-footer-link">
+                  <Link
+                    to={link.to}
+                    className="text-[0.94rem] text-ink-400 no-underline transition-colors hover:text-white hover:underline hover:decoration-1 hover:underline-offset-[3px]"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -123,14 +131,12 @@ function SiteFooter() {
         ))}
       </div>
 
-      <div className="site-footer-bar">
-        <div className="site-footer-bar-inner">
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-wrap items-center justify-between gap-4 px-5 py-4 text-[0.85rem] text-ink-500">
           <span>
             &copy; {new Date().getFullYear()} MentorMatch. All rights reserved.
           </span>
-          <span className="site-footer-credit">
-            Built by Ajobe Dev
-          </span>
+          <span className="text-ink-600">Built by Ajobe Dev</span>
         </div>
       </div>
     </footer>

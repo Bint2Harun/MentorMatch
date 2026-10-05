@@ -2,6 +2,30 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
+  authBack,
+  authCard,
+  authCardSub,
+  authCardTitle,
+  authError,
+  authFoot,
+  authInput,
+  authLabel,
+  authLayout,
+  authLede,
+  authNote,
+  authPage,
+  authPasswordToggle,
+  authPasswordWrap,
+  authPills,
+  authPromo,
+  authRule,
+  authSubmit,
+  authSuccess,
+  authTitle,
+  pill,
+  textLink,
+} from "../components/marketing-ui";
+import {
   CheckCircleIcon,
   ArrowLeftIcon,
   EyeIcon,
@@ -77,45 +101,49 @@ function RegisterPage() {
   return (
     // Inside MarketingLayout, which already owns the header, footer and the
     // bottom-anchored flex column.
-    <div className="auth-page">
-      <div className="auth-layout">
-        <section className="auth-promo">
-          <h1 className="auth-title">
+    <div className={authPage}>
+      <div className={authLayout}>
+        <section className={authPromo}>
+          <h1 className={authTitle}>
             Start your mentorship journey today.
           </h1>
 
-          <p className="auth-lede">
+          <p className={authLede}>
             Create a free Student account to discover approved mentors, request
             one-to-one sessions, and receive guidance for your academic and
             career goals.
           </p>
 
-          <ul className="auth-pills">
-            {PILLS.map((pill) => (
-              <li className="auth-pill" key={pill}>
-                <CheckCircleIcon width={15} height={15} />
-                {pill}
+          <ul className={authPills}>
+            {PILLS.map((item) => (
+              <li key={item} className={pill}>
+                <CheckCircleIcon
+                  width={15}
+                  height={15}
+                  className="text-brand-600 dark:text-brand-400"
+                />
+                {item}
               </li>
             ))}
           </ul>
         </section>
 
-        <section className="auth-card" aria-label="Registration form">
-          <div className="auth-card-head">
-            <h2 className="auth-card-title">Create your account</h2>
-            <p className="auth-card-sub">
+        <section className={authCard} aria-label="Registration form">
+          <div>
+            <h2 className={authCardTitle}>Create your account</h2>
+            <p className={authCardSub}>
               Join MentorMatch and begin as a Student.
             </p>
           </div>
 
-          <div className="auth-note">
+          <div className={authNote}>
             Mentor and Administrator access can only be assigned through the
             approved system workflow.
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="fullName">
+            <div className="mb-4">
+              <label className={authLabel} htmlFor="fullName">
                 Full name
               </label>
 
@@ -123,7 +151,7 @@ function RegisterPage() {
                 id="fullName"
                 name="fullName"
                 type="text"
-                className="auth-input"
+                className={authInput}
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
                 placeholder="Enter your full name"
@@ -131,8 +159,8 @@ function RegisterPage() {
               />
             </div>
 
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="email">
+            <div className="mb-4">
+              <label className={authLabel} htmlFor="email">
                 Email address
               </label>
 
@@ -140,7 +168,7 @@ function RegisterPage() {
                 id="email"
                 name="email"
                 type="email"
-                className="auth-input"
+                className={authInput}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="example@email.com"
@@ -148,17 +176,17 @@ function RegisterPage() {
               />
             </div>
 
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="password">
+            <div className="mb-4">
+              <label className={authLabel} htmlFor="password">
                 Password
               </label>
 
-              <div className="auth-password-wrap">
+              <div className={authPasswordWrap}>
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  className="auth-input"
+                  className={authInput}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="At least 6 characters"
@@ -167,7 +195,7 @@ function RegisterPage() {
 
                 <button
                   type="button"
-                  className="auth-password-toggle"
+                  className={authPasswordToggle}
                   onClick={() => setShowPassword((visible) => !visible)}
                   aria-label={
                     showPassword ? "Hide password" : "Show password"
@@ -184,13 +212,13 @@ function RegisterPage() {
             </div>
 
             {errorMessage && (
-              <div className="auth-error" role="alert">
+              <div className={authError} role="alert">
                 {errorMessage}
               </div>
             )}
 
             {message && (
-              <div className="auth-success" role="status">
+              <div className={authSuccess} role="status">
                 <CheckCircleIcon width={18} height={18} />
                 <span>{message}</span>
               </div>
@@ -198,23 +226,23 @@ function RegisterPage() {
 
             <button
               type="submit"
-              className="btn btn-primary auth-submit"
+              className={authSubmit}
               disabled={submitting}
             >
               {submitting ? "Creating account..." : "Create account"}
             </button>
           </form>
 
-          <hr className="auth-rule" />
+          <hr className={authRule} />
 
-          <p className="auth-foot">
+          <p className={authFoot}>
             Already have an account?{" "}
-            <Link to="/login" className="text-link">
+            <Link to="/login" className={textLink}>
               Log in
             </Link>
           </p>
 
-          <Link to="/" className="auth-back">
+          <Link to="/" className={authBack}>
             <ArrowLeftIcon width={15} height={15} />
             Back to home
           </Link>

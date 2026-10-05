@@ -38,11 +38,15 @@ function MarketingLayout() {
   }, [pathname, hash]);
 
   return (
-    <div className="site-shell">
+    // min-h-dvh + flex column + flex-1 main is what anchors the footer to the
+    // bottom of the viewport on short pages.
+    <div className="flex min-h-dvh flex-col bg-[var(--surface)] text-[var(--text-body)]">
       <SiteHeader />
-      <main className="site-main">
+
+      <main className="flex-1">
         <Outlet />
       </main>
+
       <SiteFooter />
     </div>
   );
