@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRole } from "../hooks/useRole";
+import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
 
 function MentorEditProfilePage() {
   const { user, profile, signOut } = useAuth();
+  const { loading: authLoading, profilePending, isAllowed } = useRole("Mentor");
   const navigate = useNavigate();
 
   const [bio, setBio] = useState("");
@@ -96,14 +99,12 @@ function MentorEditProfilePage() {
     }
   };
 
-  if (profile?.role !== "Mentor") {
-    return (
-      <main className="container">
-        <h1>Access Denied</h1>
-        <p>You do not have permission to edit a mentor profile.</p>
-        <Link to="/">Back to Home</Link>
-      </main>
-    );
+  if (authLoading || profilePending) {
+    return <p style={{ padding: "2rem" }}>Loading...</p>;
+  }
+
+  if (!isAllowed) {
+    return <AccessDenied detail="You do not have permission to edit a mentor profile." />;
   }
 
   if (loading) {

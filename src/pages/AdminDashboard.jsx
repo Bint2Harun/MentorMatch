@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRole } from "../hooks/useRole";
+import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
 
 const ROLE_LABELS = {
@@ -19,6 +21,7 @@ const STATUS_LABELS = {
 function AdminDashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { loading: authLoading, profilePending, isAllowed } = useRole("Administrator");
   const location = useLocation();
 
   const [activeTab, setActiveTab] = useState("users");
@@ -245,14 +248,12 @@ function AdminDashboard() {
   const bookingCount = bookings.length;
   const pendingMentorCount = pendingMentors.length;
 
-  if (profile?.role !== "Administrator") {
-    return (
-      <main className="container">
-        <h1>Access Denied</h1>
-        <p>You do not have permission to access this page.</p>
-        <Link to="/">Back to Home</Link>
-      </main>
-    );
+  if (authLoading || profilePending) {
+    return <p style={{ padding: "2rem" }}>Loading...</p>;
+  }
+
+  if (!isAllowed) {
+    return <AccessDenied />;
   }
 
   return (

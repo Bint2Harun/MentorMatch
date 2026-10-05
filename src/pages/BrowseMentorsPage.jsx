@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
+// The RPC is asked for one extra row so we can tell whether a next page exists
+// without a second count query.
+const PAGE_SIZE = 12;
+
 function BrowseMentorsPage() {
   const { user, profile, loading: authLoading } = useAuth();
 
@@ -12,86 +16,91 @@ function BrowseMentorsPage() {
 
   const [selectedFaculty, setSelectedFaculty] = useState("All");
   const [faculties, setFaculties] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  // Faculty list comes from expertise_categories rather than from the mentors
+  // on screen: once filtering happens in SQL the visible rows no longer contain
+  // every faculty, so deriving the dropdown from them would drop options.
+  useEffect(() => {
+    const loadFaculties = async () => {
+      const { data, error } = await supabase
+        .from("expertise_categories")
+        .select("faculty")
+        .not("faculty", "is", null);
+
+      if (error) {
+        console.error("Error loading faculties:", error);
+        return;
+      }
+
+      const unique = new Set(
+        (data || []).map((row) => row.faculty).filter(Boolean)
+      );
+      setFaculties(["All", ...Array.from(unique).sort()]);
+    };
+
+    loadFaculties();
+  }, []);
 
   useEffect(() => {
     const loadMentors = async () => {
       setLoading(true);
       setErrorMessage("");
 
-      const { data, error } = await supabase
-        .from("mentor_profiles")
-        .select(`
-          id,
-          bio,
-          skills,
-          is_approved,
-          mentor_expertise (
-            expertise_categories (
-              id,
-              name,
-              faculty
-            )
-          ),
-          profiles:profiles!inner (
-            full_name,
-            email
-          )
-        `)
-        .eq("is_approved", true)
-        .order("bio", { ascending: true });
+      // search_mentors enforces is_approved and role = 'Mentor' server-side and
+      // aggregates expertise categories, replacing the nested PostgREST joins
+      // this page used to normalise by hand.
+      const { data, error } = await supabase.rpc("search_mentors", {
+        p_faculty: selectedFaculty === "All" ? null : selectedFaculty,
+        p_limit: PAGE_SIZE + 1,
+        p_offset: page * PAGE_SIZE,
+      });
 
       if (error) {
         console.error("Error loading mentors:", error);
         setErrorMessage("Unable to load mentors. Please try again.");
+        setMentors([]);
+        setHasNextPage(false);
         setLoading(false);
         return;
       }
 
-      const transformed = (data || []).map((mentor) => {
-        const profileData = Array.isArray(mentor.profiles)
-          ? mentor.profiles[0]
-          : mentor.profiles;
+      const rows = data || [];
+      setHasNextPage(rows.length > PAGE_SIZE);
 
-        const categories = (mentor.mentor_expertise || [])
-          .map((expertise) => expertise.expertise_categories)
-          .filter(Boolean);
-
-        return {
-          id: mentor.id,
-          bio: mentor.bio || "",
-          skills: Array.isArray(mentor.skills) ? mentor.skills : [],
-          profiles: profileData,
-          categories,
-        };
-      });
+      const transformed = rows.slice(0, PAGE_SIZE).map((row) => ({
+        id: row.id,
+        bio: row.bio || "",
+        skills: Array.isArray(row.skills) ? row.skills : [],
+        industry: row.industry,
+        yearsExperience: row.years_experience,
+        timezone: row.timezone,
+        profiles: {
+          full_name: row.full_name,
+          email: row.email,
+        },
+        // The RPC aggregates category_ids / category_names / category_faculties
+        // with one shared `order by`, so they are index-aligned by construction.
+        categories: (row.category_names || []).map((name, index) => ({
+          id: (row.category_ids || [])[index],
+          name,
+          faculty: (row.category_faculties || [])[index],
+        })),
+      }));
 
       setMentors(transformed);
-
-      const facultySet = new Set();
-
-      transformed.forEach((mentor) => {
-        mentor.categories.forEach((category) => {
-          if (category.faculty) {
-            facultySet.add(category.faculty);
-          }
-        });
-      });
-
-      setFaculties(["All", ...Array.from(facultySet).sort()]);
       setLoading(false);
     };
 
     loadMentors();
-  }, []);
+  }, [selectedFaculty, page]);
 
-  const filteredMentors =
-    selectedFaculty === "All"
-      ? mentors
-      : mentors.filter((mentor) =>
-          mentor.categories.some(
-            (category) => category.faculty === selectedFaculty
-          )
-        );
+  // Changing the faculty invalidates the current offset.
+  const handleFacultyChange = (faculty) => {
+    setSelectedFaculty(faculty);
+    setPage(0);
+  };
 
   const getBackLink = () => {
     if (!user) return "/";
@@ -161,7 +170,7 @@ function BrowseMentorsPage() {
           <select
             id="faculty-filter"
             value={selectedFaculty}
-            onChange={(e) => setSelectedFaculty(e.target.value)}
+            onChange={(e) => handleFacultyChange(e.target.value)}
           >
             {faculties.map((faculty) => (
               <option key={faculty} value={faculty}>
@@ -172,8 +181,11 @@ function BrowseMentorsPage() {
         </div>
 
         <p className="browse-mentors-count">
-          {filteredMentors.length} mentor
-          {filteredMentors.length === 1 ? "" : "s"} found
+          {mentors.length === 0
+            ? "No mentors on this page"
+            : `Showing ${page * PAGE_SIZE + 1}-${
+                page * PAGE_SIZE + mentors.length
+              }`}
         </p>
       </section>
 
@@ -183,16 +195,16 @@ function BrowseMentorsPage() {
       )}
 
       {/* Empty State */}
-      {!errorMessage && filteredMentors.length === 0 && (
+      {!errorMessage && mentors.length === 0 && (
         <div className="dashboard-empty-state">
           No approved mentors were found for this faculty.
         </div>
       )}
 
       {/* Mentor Cards */}
-      {!errorMessage && filteredMentors.length > 0 && (
+      {!errorMessage && mentors.length > 0 && (
         <section className="mentor-card-grid">
-          {filteredMentors.map((mentor, index) => {
+          {mentors.map((mentor, index) => {
             const mentorName = mentor.profiles?.full_name || "Mentor";
 
             const initials = mentorName
@@ -314,6 +326,34 @@ function BrowseMentorsPage() {
             );
           })}
         </section>
+      )}
+
+      {/* Pagination */}
+      {!errorMessage && mentors.length > 0 && (page > 0 || hasNextPage) && (
+        <nav
+          className="browse-mentors-pagination"
+          aria-label="Mentor list pages"
+        >
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={page === 0 || loading}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            Previous
+          </button>
+
+          <span className="browse-mentors-count">Page {page + 1}</span>
+
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={!hasNextPage || loading}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </button>
+        </nav>
       )}
     </main>
   );

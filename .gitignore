@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Environment files. `.env` holds the Supabase anon key and must never be
+# committed; `*.local` above only covers `.env.local`, not `.env`.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

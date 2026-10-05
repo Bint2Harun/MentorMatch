@@ -223,32 +223,47 @@ users west of Greenwich, which is the bug
    npx supabase gen types typescript --project-id <ref> --schema public > src/types/database.ts
    ```
 
-4. Backfill `mentor_profiles.timezone` for existing mentors (it defaults to
-   `UTC`, which is correct-but-wrong for most). Until a mentor sets it, their
-   slots are interpreted as UTC.
+4. **Skipped for an empty database.** Backfilling `mentor_profiles.timezone`
+   only matters when mentors already exist; it defaults to `UTC`, which is
+   correct-but-wrong for most. Until a mentor sets it, their slots are
+   interpreted as UTC. With no pre-existing rows there is nothing to backfill.
 
-5. **Do not** point the app at the new schema until Phase 2 lands. `0002`
-   tightens `profiles` visibility; existing pages keep working, but verify
-   `AdminDashboard` user list and `BrowseMentorsPage` still render.
+5. Phase 2 has landed, so the app can be pointed at the new schema. `0002`
+   tightens `profiles` visibility, so re-check `AdminDashboard`'s user list and
+   `BrowseMentorsPage` after applying. `BrowseMentorsPage` now reads mentors
+   through the `search_mentors` RPC, which requires `0004`.
 
 ## 9. Findings outside the data model
 
-Recorded here because they affect Phase 2/3 planning, not because they are
-fixed yet:
+Originally recorded here as open items. Status as of Phase 2:
 
-- `App.jsx:98-104` registers `/mentor-availability` twice; the second uses
-  `requiredRole=`, a prop `ProtectedRoute.jsx:4` does not accept, so it renders
-  children with no role check at all.
-- Role checks are duplicated: `ProtectedRoute` guards some routes while
-  `MentorBookingsPage.jsx:164`, `StudentBookingsPage.jsx:365` and
-  `MentorDashboard.jsx:253` each re-implement an inline "Access Denied". One
-  `useRole()` hook should replace all four.
-- `index.html:5` references `/favicon.svg`; `public/` is empty in the working
-  tree, so the favicon 404s.
-- No `.env` is present and `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are
-  read at `src/lib/supabase.js:3-4`. `.env` is also not in `.gitignore`, so it
-  would be committed — add it before creating the file.
-- Roughly 200 lines of hand-written `.map()` PostgREST-join normalisation
-  (`BrowseMentorsPage:50`, `StudentBookingsPage:116`,
-  `MentorBookingsPage:55`, `AdminDashboard:95`) duplicate the view models in
-  `domain.ts`. Phase 3 replaces them with typed adapters.
+- **Fixed.** `App.jsx` registered `/mentor-availability` twice; the second used
+  a `requiredRole=` prop that `ProtectedRoute` does not accept, so it carried no
+  role check at all. The duplicate is gone. `ProtectedRoute` now treats a
+  missing or empty `allowedRoles` as **deny** rather than allow, so a mistyped
+  prop can no longer silently open a route; use `allowedRoles={null}` to opt
+  out deliberately.
+- **Fixed.** Role checks were duplicated between `ProtectedRoute` and seven
+  inline "Access Denied" panels (`AdminCategoriesPage`, `AdminDashboard`,
+  `MentorBookingsPage`, `MentorDashboard`, `MentorEditProfilePage`,
+  `StudentBookingsPage`, `StudentDashboard`). They now share
+  `src/hooks/useRole.js` and `src/components/AccessDenied.jsx`. The hook also
+  fixes a visible bug: the old `profile?.role !== "Mentor"` guards were true
+  while `profile` was still `null`, so every guarded page flashed
+  "Access Denied" during profile load.
+- **Fixed.** `index.html` referenced a missing `/favicon.svg`; the logo now
+  supplies `favicon.ico` plus PNG, Apple touch and Android icons, and the
+  unused Vite scaffold `public/favicon.svg` and `public/icons.svg` are removed.
+- **Fixed.** `.env` was not in `.gitignore` (only `*.local` was), so a real
+  `.env` would have been committed. `.gitignore` now excludes `.env` and
+  `.env.*`, and `.env.example` documents the two variables. Never commit the
+  `service_role` key: it bypasses RLS.
+- **Partially done.** `BrowseMentorsPage` now calls the `search_mentors` RPC
+  (faculty filtering and pagination in SQL) instead of fetching every approved
+  mentor and filtering in the browser, which removes its nested PostgREST-join
+  normalisation. The equivalent hand-written `.map()` normalisation in
+  `StudentBookingsPage`, `MentorBookingsPage` and `AdminDashboard` is still
+  there; Phase 3 replaces all four with typed adapters over `domain.ts`.
+- **Still open.** The home page scrolls horizontally below ~480px because of a
+  hero image wrapper with `minWidth: "260px"` (`src/pages/HomePage.jsx`). The
+  page header wraps correctly, but the hero overflow is untouched.

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRole } from "../hooks/useRole";
+import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
 
 const DAYS = [
@@ -15,6 +17,7 @@ const DAYS = [
 
 function MentorDashboard() {
   const { user, profile, signOut } = useAuth();
+  const { loading: authLoading, profilePending, isAllowed } = useRole("Mentor");
   const location = useLocation();
 
   const [mentorProfile, setMentorProfile] = useState(null);
@@ -250,14 +253,12 @@ function MentorDashboard() {
     .charAt(0)
     .toUpperCase();
 
-  if (profile?.role !== "Mentor") {
-    return (
-      <main className="container">
-        <h1>Access Denied</h1>
-        <p>You do not have permission to access the Mentor Dashboard.</p>
-        <Link to="/">Back to Home</Link>
-      </main>
-    );
+  if (authLoading || profilePending) {
+    return <p style={{ padding: "2rem" }}>Loading...</p>;
+  }
+
+  if (!isAllowed) {
+    return <AccessDenied detail="You do not have permission to access the Mentor Dashboard." />;
   }
 
   if (loading) {

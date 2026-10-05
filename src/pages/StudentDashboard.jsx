@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRole } from "../hooks/useRole";
+import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
 
 function StudentDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, signOut } = useAuth();
+  const { loading: authLoading, profilePending, isAllowed } = useRole("Student");
 
   const [stats, setStats] = useState({
     totalBookings: 0,
@@ -95,14 +98,12 @@ function StudentDashboard() {
     .charAt(0)
     .toUpperCase();
 
-  if (profile?.role !== "Student") {
-    return (
-      <main className="container">
-        <h1>Access Denied</h1>
-        <p>You do not have permission to access the Student Dashboard.</p>
-        <Link to="/">Back to Home</Link>
-      </main>
-    );
+  if (authLoading || profilePending) {
+    return <p style={{ padding: "2rem" }}>Loading...</p>;
+  }
+
+  if (!isAllowed) {
+    return <AccessDenied detail="You do not have permission to access the Student Dashboard." />;
   }
 
   return (

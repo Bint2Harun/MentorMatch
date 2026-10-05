@@ -94,14 +94,6 @@ function App() {
     </ProtectedRoute>
   }
 />
-<Route
-  path="/mentor-availability"
-  element={
-    <ProtectedRoute requiredRole="Mentor">
-      <MentorAvailabilityPage />
-    </ProtectedRoute>
-  }
-/>
 
       <Route
         path="/apply-mentor"

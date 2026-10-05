@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRole } from "../hooks/useRole";
+import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
 
 const STATUS_LABELS = {
@@ -12,6 +14,7 @@ const STATUS_LABELS = {
 
 function MentorBookingsPage() {
   const { user, profile, signOut } = useAuth();
+  const { loading: authLoading, profilePending, isAllowed } = useRole("Mentor");
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,14 +164,12 @@ function MentorBookingsPage() {
     updateStatus(bookingId, "completed");
   };
 
-  if (profile?.role !== "Mentor") {
-    return (
-      <main className="container">
-        <h1>Access Denied</h1>
-        <p>You do not have permission to access this page.</p>
-        <Link to="/">Back to Home</Link>
-      </main>
-    );
+  if (authLoading || profilePending) {
+    return <p style={{ padding: "2rem" }}>Loading...</p>;
+  }
+
+  if (!isAllowed) {
+    return <AccessDenied />;
   }
 
   return (
