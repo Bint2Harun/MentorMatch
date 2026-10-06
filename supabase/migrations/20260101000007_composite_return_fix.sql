@@ -6,15 +6,10 @@
 -- databases that already applied the pre-cast versions.
 
 CREATE OR REPLACE FUNCTION public.cancel_booking(p_booking_id uuid)
-
  RETURNS booking_request_result
-
  LANGUAGE plpgsql
-
  SECURITY DEFINER
-
  SET search_path TO 'public'
-
 AS $function$
 
 declare
@@ -63,18 +58,13 @@ begin
 
 end;
 
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.request_booking(p_mentor_id uuid, p_scheduled_date date, p_start_time time without time zone, p_end_time time without time zone, p_notes text DEFAULT NULL::text)
-
  RETURNS booking_request_result
-
  LANGUAGE plpgsql
-
  SECURITY DEFINER
-
  SET search_path TO 'public'
-
 AS $function$
 
 declare
@@ -409,4 +399,4 @@ begin
 
 end;
 
-$function$
+$function$;
