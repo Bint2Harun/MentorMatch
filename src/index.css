@@ -1072,3 +1072,620 @@ code,
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+/* =========================================================
+   STUDENT DASHBOARD HUB (dashboard, sessions, profile, notifications)
+   ========================================================= */
+
+/* Header actions: notification bell + avatar */
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+/* Avatar images */
+.dashboard-avatar img,
+.dashboard-header-avatar img,
+.edit-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Hero / primary CTA */
+.dashboard-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--brand-green-light), #ffffff);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-hero-title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-hero-text {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.dashboard-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .dashboard-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Status at a glance */
+.status-glance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+}
+
+.status-glance-item {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: #f1f3f5;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.status-glance-value {
+  color: var(--text-heading);
+}
+
+/* Panel header (title + action button) */
+.dashboard-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Status tabs (booking list) */
+.status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.status-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.status-tab:hover {
+  border-color: var(--brand-green);
+  color: var(--brand-green-dark);
+}
+
+.status-tab-active {
+  border-color: var(--brand-green);
+  background: var(--brand-green);
+  color: #ffffff;
+}
+
+.status-tab-active:hover {
+  color: #ffffff;
+}
+
+.status-tab-count {
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+/* Status pills */
+.status-pill {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pill-pending {
+  background: var(--brand-orange-light);
+  color: var(--brand-orange-dark);
+}
+
+.status-pill-accepted {
+  background: var(--brand-green-light);
+  color: var(--brand-green-dark);
+}
+
+.status-pill-declined {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.status-pill-completed {
+  background: #eef1ff;
+  color: var(--info);
+}
+
+.status-pill-cancelled {
+  background: #f1f3f5;
+  color: #4d525b;
+}
+
+/* Recommended mentors carousel */
+.recommended-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(230px, 250px);
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.25rem 1rem;
+}
+
+.recommended-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.recommended-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.mentor-card-avatar {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--brand-green-light);
+  color: var(--brand-green-dark);
+  font-size: 0.9rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.recommended-card-name {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.recommended-card-meta {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.recommended-card-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+}
+
+.recommended-card-action {
+  margin-top: auto;
+  padding-top: 0.9rem;
+}
+
+/* Upcoming sessions cards */
+.upcoming-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upcoming-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+
+.upcoming-card-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.upcoming-card-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.upcoming-card-title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.upcoming-card-time {
+  margin: 0.25rem 0 0;
+  color: var(--brand-green-dark);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.upcoming-card-notes {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.upcoming-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Account enrichment grid spacing */
+.dashboard-account-grid-enrichment {
+  margin-top: 1rem;
+}
+
+/* =========================================================
+   MODALS (edit profile / reschedule)
+   ========================================================= */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  overflow-y: auto;
+}
+
+.modal {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  animation: modal-in 0.16s ease-out;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.modal-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Edit profile fields */
+.edit-profile-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.edit-profile-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 1.5rem;
+}
+
+.edit-profile-upload {
+  margin-right: 0.5rem;
+}
+
+.edit-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.edit-profile-field label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.edit-profile-field input,
+.edit-profile-field textarea,
+.edit-profile-field select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.edit-profile-field input:focus,
+.edit-profile-field textarea:focus {
+  outline: none;
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 3px var(--brand-green-light);
+}
+
+/* Tag chips input */
+.tag-input-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.tag-input-chips input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.2rem 0.25rem;
+  border: none !important;
+  background: transparent;
+  box-shadow: none !important;
+}
+
+.tag-input-remove {
+  margin-left: 0.25rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Reschedule modal extras */
+.reschedule-mentor {
+  background: var(--brand-green-light);
+}
+
+.reschedule-local-preview {
+  margin: 0;
+  color: var(--brand-green-dark);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.reschedule-warning {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  background: var(--brand-orange-light);
+  color: var(--brand-orange-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* =========================================================
+   NOTIFICATION BELL + PANEL
+   ========================================================= */
+
+.notification-bell {
+  position: relative;
+}
+
+.notification-bell-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--text-heading);
+  cursor: pointer;
+}
+
+.notification-bell-button:hover {
+  border-color: var(--brand-green);
+  color: var(--brand-green-dark);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: 340px;
+  max-width: calc(100vw - 2rem);
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  z-index: 50;
+}
+
+.notification-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.notification-panel-header strong {
+  color: var(--text-heading);
+  font-size: 0.95rem;
+}
+
+.notification-mark-all {
+  border: none;
+  background: transparent;
+  color: var(--brand-green-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-item {
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background: var(--page-bg);
+}
+
+.notification-item-unread {
+  background: var(--brand-green-light);
+}
+
+.notification-title {
+  color: var(--text-heading);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.notification-body {
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.notification-time {
+  margin-top: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.notification-empty {
+  margin: 0;
+  padding: 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}

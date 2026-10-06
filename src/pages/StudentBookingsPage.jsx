@@ -3,60 +3,44 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useRole } from "../hooks/useRole";
 import AccessDenied from "../components/AccessDenied";
+import RescheduleModal from "../components/RescheduleModal";
 import { supabase } from "../lib/supabase";
 import { friendlyBookingError } from "../lib/bookingErrors";
+import {
+  BOOKING_SELECT,
+  mapBookingRow,
+  studentStatusLabel,
+  statusPillClass,
+} from "../lib/bookings";
 import {
   isZonedWallTimeInPast,
   zonedWallTimeToUtc,
   formatInstantRangeLocal,
 } from "../lib/timezones";
 
-const STATUS_LABELS = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  cancelled: "Cancelled",
-  completed: "Completed",
-};
+const BOOKING_TABS = [
+  { key: "all", label: "All" },
+  { key: "pending", label: "Pending" },
+  { key: "accepted", label: "Accepted" },
+  { key: "declined", label: "Declined" },
+  { key: "completed", label: "Completed" },
+];
 
-const BOOKING_SELECT = `
-  id,
-  scheduled_date,
-  start_time,
-  end_time,
-  starts_at,
-  ends_at,
-  status,
-  notes,
-  created_at,
-  mentor:mentor_profiles (
-    id,
-    profiles:profiles (
-      full_name
-    )
-  )
-`;
+function matchesTab(booking, tab) {
+  const label = studentStatusLabel(booking);
 
-function mapBookingRow(booking) {
-  const mentorData = Array.isArray(booking.mentor)
-    ? booking.mentor[0]
-    : booking.mentor;
-
-  const profileData = Array.isArray(mentorData?.profiles)
-    ? mentorData.profiles[0]
-    : mentorData?.profiles;
-
-  return {
-    id: booking.id,
-    scheduled_date: booking.scheduled_date,
-    start_time: booking.start_time,
-    end_time: booking.end_time,
-    starts_at: booking.starts_at,
-    ends_at: booking.ends_at,
-    status: booking.status,
-    notes: booking.notes,
-    created_at: booking.created_at,
-    mentorName: profileData?.full_name || "(no name)",
-  };
+  switch (tab) {
+    case "pending":
+      return booking.status === "pending";
+    case "accepted":
+      return booking.status === "confirmed";
+    case "declined":
+      return booking.status === "cancelled" && label !== "Cancelled by you";
+    case "completed":
+      return booking.status === "completed";
+    default:
+      return true;
+  }
 }
 
 function StudentBookingsPage() {
@@ -66,6 +50,9 @@ function StudentBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [rescheduleBooking, setRescheduleBooking] = useState(null);
 
   // Form state
   const [mentors, setMentors] = useState([]);
@@ -428,6 +415,42 @@ function StudentBookingsPage() {
           Your Booking Requests
         </h2>
 
+        <div className="status-tabs" role="tablist">
+          {BOOKING_TABS.map((tab) => {
+            const count =
+              tab.key === "all"
+                ? bookings.length
+                : bookings.filter((booking) => matchesTab(booking, tab.key))
+                    .length;
+
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                className={`status-tab ${
+                  activeTab === tab.key ? "status-tab-active" : ""
+                }`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label} <span className="status-tab-count">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {successMessage && (
+          <p
+            style={{
+              color: "var(--brand-green)",
+              marginTop: "1rem",
+              fontSize: "0.95rem",
+              fontWeight: 600,
+            }}
+          >
+            {successMessage}
+          </p>
+        )}
+
         {loading && !errorMessage && (
           <p style={{ fontSize: "0.95rem" }}>Loading bookings...</p>
         )}
@@ -438,127 +461,192 @@ function StudentBookingsPage() {
           </p>
         )}
 
-        {!loading && !errorMessage && bookings.length > 0 && (
-          <div className="dashboard-stats-grid">
-            {bookings.map((booking) => {
-              const accentClass =
-                booking.status === "confirmed"
-                  ? "dashboard-stat-card-green"
-                  : booking.status === "pending"
-                  ? "dashboard-stat-card-orange"
-                  : booking.status === "cancelled"
-                  ? "dashboard-stat-card-blue"
-                  : "dashboard-stat-card-dark-green";
+        {!loading &&
+          !errorMessage &&
+          bookings.length > 0 &&
+          (() => {
+            const visible = bookings.filter((booking) =>
+              matchesTab(booking, activeTab)
+            );
 
+            if (visible.length === 0) {
               return (
-                <article
-                  key={booking.id}
-                  className={`dashboard-stat-card ${accentClass}`}
-                >
-                  {/* Mentor name */}
-                  <div
-                    style={{
-                      fontWeight: 800,
-                      fontSize: "1.05rem",
-                      marginBottom: "0.5rem",
-                      color: "var(--text-heading)",
-                    }}
-                  >
-                    Mentor: {booking.mentorName}
-                  </div>
-
-                  {/* Date */}
-                  <div
-                    style={{
-                      fontSize: "0.9rem",
-                      marginBottom: "0.25rem",
-                      color: "var(--text)",
-                    }}
-                  >
-                    <strong>Date:</strong> {booking.scheduled_date}
-                  </div>
-
-                  {/* Time — absolute instants rendered in the student's own
-                      timezone; wall clock as a fallback for legacy rows. */}
-                  <div
-                    style={{
-                      fontSize: "0.9rem",
-                      marginBottom: "0.25rem",
-                      color: "var(--text)",
-                    }}
-                  >
-                    <strong>Time:</strong>{" "}
-                    {booking.starts_at && booking.ends_at
-                      ? formatInstantRangeLocal(
-                          booking.starts_at,
-                          booking.ends_at
-                        )
-                      : `${booking.start_time} – ${booking.end_time}`}
-                  </div>
-
-                  {/* Status */}
-                  <div
-                    style={{
-                      fontSize: "0.9rem",
-                      color: "var(--text)",
-                    }}
-                  >
-                    <strong>Status:</strong>{" "}
-                    {STATUS_LABELS[booking.status] || booking.status}
-                  </div>
-
-                  {/* Notes */}
-                  {booking.notes && (
-                    <div
-                      style={{
-                        marginTop: "0.5rem",
-                        fontSize: "0.9rem",
-                        color: "var(--text)",
-                      }}
-                    >
-                      <strong>Notes:</strong> {booking.notes}
-                    </div>
-                  )}
-
-                  {/* Actions and status hints */}
-                  {booking.status === "pending" && (
-                    <div style={{ marginTop: "0.75rem" }}>
-                      <button
-                        onClick={() => handleCancelBooking(booking.id)}
-                        className="btn btn-danger"
-                      >
-                        Cancel Booking
-                      </button>
-                    </div>
-                  )}
-
-                  {booking.status === "confirmed" && (
-                    <div className="text-muted" style={{ marginTop: "0.75rem" }}>
-                      (Booking confirmed by mentor)
-                    </div>
-                  )}
-
-                  {booking.status === "completed" && (
-                    <div className="text-muted" style={{ marginTop: "0.75rem" }}>
-                      (Session completed)
-                    </div>
-                  )}
-
-                  {booking.status === "cancelled" && (
-                    <div className="text-muted" style={{ marginTop: "0.75rem" }}>
-                      (Booking cancelled)
-                    </div>
-                  )}
-                </article>
+                <p style={{ fontSize: "0.95rem" }}>
+                  No bookings in this tab.
+                </p>
               );
-            })}
-          </div>
-        )}
+            }
+
+            return (
+              <div className="dashboard-stats-grid">
+                {visible.map((booking) => {
+                  const accentClass =
+                    booking.status === "confirmed"
+                      ? "dashboard-stat-card-green"
+                      : booking.status === "pending"
+                      ? "dashboard-stat-card-orange"
+                      : booking.status === "cancelled"
+                      ? "dashboard-stat-card-blue"
+                      : "dashboard-stat-card-dark-green";
+
+                  return (
+                    <article
+                      key={booking.id}
+                      className={`dashboard-stat-card ${accentClass}`}
+                    >
+                      {/* Mentor name */}
+                      <div
+                        style={{
+                          fontWeight: 800,
+                          fontSize: "1.05rem",
+                          marginBottom: "0.5rem",
+                          color: "var(--text-heading)",
+                        }}
+                      >
+                        Mentor: {booking.mentorName}
+                      </div>
+
+                      {/* Date */}
+                      <div
+                        style={{
+                          fontSize: "0.9rem",
+                          marginBottom: "0.25rem",
+                          color: "var(--text)",
+                        }}
+                      >
+                        <strong>Date:</strong> {booking.scheduled_date}
+                      </div>
+
+                      {/* Time — absolute instants rendered in the student's own
+                          timezone; wall clock as a fallback for legacy rows. */}
+                      <div
+                        style={{
+                          fontSize: "0.9rem",
+                          marginBottom: "0.25rem",
+                          color: "var(--text)",
+                        }}
+                      >
+                        <strong>Time:</strong>{" "}
+                        {booking.starts_at && booking.ends_at
+                          ? formatInstantRangeLocal(
+                              booking.starts_at,
+                              booking.ends_at
+                            )
+                          : `${booking.start_time} – ${booking.end_time}`}
+                      </div>
+
+                      {/* Status */}
+                      <div
+                        style={{
+                          fontSize: "0.9rem",
+                          marginBottom: "0.25rem",
+                          color: "var(--text)",
+                        }}
+                      >
+                        <strong>Status:</strong>{" "}
+                        <span className={statusPillClass(booking)}>
+                          {studentStatusLabel(booking)}
+                        </span>
+                      </div>
+
+                      {/* Notes */}
+                      {booking.notes && (
+                        <div
+                          style={{
+                            marginTop: "0.5rem",
+                            fontSize: "0.9rem",
+                            color: "var(--text)",
+                          }}
+                        >
+                          <strong>Topics:</strong> {booking.notes}
+                        </div>
+                      )}
+
+                      {/* Actions and status hints */}
+                      <div style={{ marginTop: "0.75rem" }}>
+                        {booking.status === "confirmed" && (
+                          <>
+                            {booking.meeting_link ? (
+                              <a
+                                className="btn btn-primary"
+                                href={booking.meeting_link}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ marginRight: "0.5rem" }}
+                              >
+                                Join Meeting Link
+                              </a>
+                            ) : (
+                              <span
+                                className="text-muted"
+                                style={{ display: "block", marginBottom: "0.5rem" }}
+                              >
+                                Meeting link pending confirmation.
+                              </span>
+                            )}
+
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              style={{ marginRight: "0.5rem" }}
+                              onClick={() => setRescheduleBooking(booking)}
+                            >
+                              Reschedule
+                            </button>
+
+                            <button
+                              onClick={() => handleCancelBooking(booking.id)}
+                              className="btn btn-danger"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+
+                        {booking.status === "pending" && (
+                          <button
+                            onClick={() => handleCancelBooking(booking.id)}
+                            className="btn btn-danger"
+                          >
+                            Cancel Booking
+                          </button>
+                        )}
+
+                        {booking.status === "completed" && (
+                          <div className="text-muted">(Session completed)</div>
+                        )}
+
+                        {booking.status === "cancelled" && (
+                          <div className="text-muted">
+                            ({studentStatusLabel(booking)})
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            );
+          })()}
       </section>
 
       <p className="mt-2">
         <Link to="/student-dashboard">Back to Student Dashboard</Link>
       </p>
+
+      {rescheduleBooking && (
+        <RescheduleModal
+          booking={rescheduleBooking}
+          onClose={() => setRescheduleBooking(null)}
+          onRescheduled={() => {
+            setRescheduleBooking(null);
+            setSuccessMessage(
+              "Session rescheduled. Your mentor will re-confirm the new time."
+            );
+            reloadAfterWrite();
+          }}
+        />
+      )}
     </div>
   );
 }
