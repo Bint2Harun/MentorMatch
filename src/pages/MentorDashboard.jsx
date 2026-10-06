@@ -114,7 +114,7 @@ function MentorDashboard() {
 
       const results = await Promise.all(
         statuses.map(async (status) => {
-          const { data, error, count } = await supabase
+          const { error, count } = await supabase
             .from("mentorship_bookings")
             .select("id", { count: "exact", head: true })
             .eq("mentor_id", user.id)

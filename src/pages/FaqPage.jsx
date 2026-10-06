@@ -66,7 +66,7 @@ function FaqPage() {
                     height={20}
                     aria-hidden="true"
                     focusable="false"
-                    className="shrink-0 text-ink-400 transition-transform group-open:rotate-180"
+                    className="shrink-0 text-ink-500 transition-transform group-open:rotate-180 dark:text-ink-400"
                   >
                     <path
                       d="m6 9 6 6 6-6"

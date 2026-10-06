@@ -4,6 +4,12 @@ import { useAuth } from "../context/AuthContext";
 import { useRole } from "../hooks/useRole";
 import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
+import { friendlyBookingError } from "../lib/bookingErrors";
+import {
+  isZonedWallTimeInPast,
+  zonedWallTimeToUtc,
+  formatInstantRangeLocal,
+} from "../lib/timezones";
 
 const STATUS_LABELS = {
   pending: "Pending",
@@ -12,15 +18,46 @@ const STATUS_LABELS = {
   completed: "Completed",
 };
 
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+const BOOKING_SELECT = `
+  id,
+  scheduled_date,
+  start_time,
+  end_time,
+  starts_at,
+  ends_at,
+  status,
+  notes,
+  created_at,
+  mentor:mentor_profiles (
+    id,
+    profiles:profiles (
+      full_name
+    )
+  )
+`;
+
+function mapBookingRow(booking) {
+  const mentorData = Array.isArray(booking.mentor)
+    ? booking.mentor[0]
+    : booking.mentor;
+
+  const profileData = Array.isArray(mentorData?.profiles)
+    ? mentorData.profiles[0]
+    : mentorData?.profiles;
+
+  return {
+    id: booking.id,
+    scheduled_date: booking.scheduled_date,
+    start_time: booking.start_time,
+    end_time: booking.end_time,
+    starts_at: booking.starts_at,
+    ends_at: booking.ends_at,
+    status: booking.status,
+    notes: booking.notes,
+    created_at: booking.created_at,
+    mentorName: profileData?.full_name || "(no name)",
+  };
+}
 
 function StudentBookingsPage() {
   const { user, profile, signOut } = useAuth();
@@ -48,6 +85,8 @@ function StudentBookingsPage() {
         .from("mentor_profiles")
         .select(`
           id,
+          timezone,
+          buffer_minutes,
           profiles:profiles (
             full_name
           )
@@ -68,6 +107,11 @@ function StudentBookingsPage() {
         return {
           id: mentor.id,
           name: profileData?.full_name || "(no name)",
+          timezone: mentor.timezone || "UTC",
+          bufferMinutes:
+            typeof mentor.buffer_minutes === "number"
+              ? mentor.buffer_minutes
+              : 15,
         };
       });
 
@@ -91,21 +135,7 @@ function StudentBookingsPage() {
 
       const { data, error } = await supabase
         .from("mentorship_bookings")
-        .select(`
-          id,
-          scheduled_date,
-          start_time,
-          end_time,
-          status,
-          notes,
-          created_at,
-          mentor:mentor_profiles (
-            id,
-            profiles:profiles (
-              full_name
-            )
-          )
-        `)
+        .select(BOOKING_SELECT)
         .eq("student_id", user.id)
         .order("scheduled_date", { ascending: true })
         .order("start_time", { ascending: true });
@@ -116,28 +146,7 @@ function StudentBookingsPage() {
         return;
       }
 
-      const transformed = (data || []).map((booking) => {
-        const mentorData = Array.isArray(booking.mentor)
-          ? booking.mentor[0]
-          : booking.mentor;
-
-        const profileData = Array.isArray(mentorData?.profiles)
-          ? mentorData.profiles[0]
-          : mentorData?.profiles;
-
-        return {
-          id: booking.id,
-          scheduled_date: booking.scheduled_date,
-          start_time: booking.start_time,
-          end_time: booking.end_time,
-          status: booking.status,
-          notes: booking.notes,
-          created_at: booking.created_at,
-          mentorName: profileData?.full_name || "(no name)",
-        };
-      });
-
-      setBookings(transformed);
+      setBookings((data || []).map(mapBookingRow));
       setLoading(false);
     };
 
@@ -146,7 +155,27 @@ function StudentBookingsPage() {
     }
   }, [profile, user]);
 
-  // Check availability and create booking
+  // Refresh the list after a write so the UI reflects the DB's decision.
+  const reloadAfterWrite = async () => {
+    const { data, error } = await supabase
+      .from("mentorship_bookings")
+      .select(BOOKING_SELECT)
+      .eq("student_id", user.id)
+      .order("scheduled_date", { ascending: true })
+      .order("start_time", { ascending: true });
+
+    if (error) {
+      setErrorMessage("Failed to refresh bookings. Please try again.");
+      return;
+    }
+
+    setBookings((data || []).map(mapBookingRow));
+  };
+
+  // Request a booking through request_booking(), the sanctioned write path:
+  // it validates duration, availability, duplicates and buffer gaps inside
+  // one transaction, with exclusion constraints underneath resolving
+  // concurrent attempts to exactly one winner (no double bookings).
   const handleCreateBooking = async (e) => {
     e.preventDefault();
 
@@ -166,122 +195,42 @@ function StudentBookingsPage() {
       return;
     }
 
+    const selectedMentor = mentors.find((m) => m.id === selectedMentorId);
+
+    // The entered times are the mentor's wall clock, so the past check has to
+    // be evaluated in the mentor's timezone, not the browser's.
+    if (
+      selectedMentor &&
+      isZonedWallTimeInPast(date, startTime, selectedMentor.timezone)
+    ) {
+      setErrorMessage("Choose a future date and time.");
+      return;
+    }
+
     setSubmitting(true);
     setErrorMessage("");
 
-    const dateObj = new Date(date + "T00:00:00");
-    const dayOfWeek = dateObj.getDay();
-
-    const { data: availSlots, error: availError } = await supabase
-      .from("mentor_availability")
-      .select("start_time, end_time")
-      .eq("mentor_id", selectedMentorId)
-      .eq("day_of_week", dayOfWeek)
-      .eq("is_active", true);
-
-    if (availError) {
-      setSubmitting(false);
-      setErrorMessage("Failed to check mentor availability. Please try again.");
-      return;
-    }
-
-    if (!availSlots || availSlots.length === 0) {
-      setSubmitting(false);
-      setErrorMessage(
-        `The mentor is not available on ${DAYS[dayOfWeek]}s. Please choose another day or mentor.`
-      );
-      return;
-    }
-
-    const overlaps = availSlots.some((slot) => {
-      const availStart = slot.start_time;
-      const availEnd = slot.end_time;
-      return startTime < availEnd && endTime > availStart;
+    const { error } = await supabase.rpc("request_booking", {
+      p_mentor_id: selectedMentorId,
+      p_scheduled_date: date,
+      p_start_time: startTime,
+      p_end_time: endTime,
+      p_notes: notes.trim() || null,
     });
-
-    if (!overlaps) {
-      setSubmitting(false);
-      setErrorMessage(
-        `The mentor is not available at ${startTime}–${endTime} on ${DAYS[dayOfWeek]}s. Please choose a different time.`
-      );
-      return;
-    }
-
-    const { error } = await supabase
-      .from("mentorship_bookings")
-      .insert({
-        student_id: user.id,
-        mentor_id: selectedMentorId,
-        scheduled_date: date,
-        start_time: startTime,
-        end_time: endTime,
-        status: "pending",
-        notes: notes.trim() || null,
-      });
 
     setSubmitting(false);
 
     if (error) {
-      setErrorMessage(
-        error.message || "Failed to create booking. Please try again."
-      );
+      setErrorMessage(friendlyBookingError(error));
       return;
     }
 
     setNotes("");
-
-    // Reload bookings
-    const { data, error: reloadError } = await supabase
-      .from("mentorship_bookings")
-      .select(`
-        id,
-        scheduled_date,
-        start_time,
-        end_time,
-        status,
-        notes,
-        created_at,
-        mentor:mentor_profiles (
-          id,
-          profiles:profiles (
-            full_name
-          )
-        )
-      `)
-      .eq("student_id", user.id)
-      .order("scheduled_date", { ascending: true })
-      .order("start_time", { ascending: true });
-
-    if (reloadError) {
-      setErrorMessage("Failed to refresh bookings. Please try again.");
-      return;
-    }
-
-    const transformed = (data || []).map((booking) => {
-      const mentorData = Array.isArray(booking.mentor)
-        ? booking.mentor[0]
-        : booking.mentor;
-
-      const profileData = Array.isArray(mentorData?.profiles)
-        ? mentorData.profiles[0]
-        : mentorData?.profiles;
-
-      return {
-        id: booking.id,
-        scheduled_date: booking.scheduled_date,
-        start_time: booking.start_time,
-        end_time: booking.end_time,
-        status: booking.status,
-        notes: booking.notes,
-        created_at: booking.created_at,
-        mentorName: profileData?.full_name || "(no name)",
-      };
-    });
-
-    setBookings(transformed);
+    await reloadAfterWrite();
   };
 
-  // Cancel booking (student)
+  // Cancel booking (student) through cancel_booking(), which verifies the
+  // caller is a participant and the transition is legal.
   const handleCancelBooking = async (bookingId) => {
     if (
       !window.confirm("Cancel this booking request? This cannot be undone.")
@@ -289,71 +238,20 @@ function StudentBookingsPage() {
       return;
 
     setErrorMessage("");
-
-    const { error } = await supabase
-      .from("mentorship_bookings")
-      .update({
-        status: "cancelled",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", bookingId);
-
-    if (error) {
-      setErrorMessage("Failed to cancel booking. Please try again.");
-      return;
-    }
-
     setLoading(true);
-    const { data, error: loadError } = await supabase
-      .from("mentorship_bookings")
-      .select(`
-        id,
-        scheduled_date,
-        start_time,
-        end_time,
-        status,
-        notes,
-        created_at,
-        mentor:mentor_profiles (
-          id,
-          profiles:profiles (
-            full_name
-          )
-        )
-      `)
-      .eq("student_id", user.id)
-      .order("scheduled_date", { ascending: true })
-      .order("start_time", { ascending: true });
 
-    setLoading(false);
-
-    if (loadError) {
-      setErrorMessage("Failed to refresh bookings. Please try again.");
-      return;
-    }
-
-    const transformed = (data || []).map((booking) => {
-      const mentorData = Array.isArray(booking.mentor)
-        ? booking.mentor[0]
-        : booking.mentor;
-
-      const profileData = Array.isArray(mentorData?.profiles)
-        ? mentorData.profiles[0]
-        : mentorData?.profiles;
-
-      return {
-        id: booking.id,
-        scheduled_date: booking.scheduled_date,
-        start_time: booking.start_time,
-        end_time: booking.end_time,
-        status: booking.status,
-        notes: booking.notes,
-        created_at: booking.created_at,
-        mentorName: profileData?.full_name || "(no name)",
-      };
+    const { error } = await supabase.rpc("cancel_booking", {
+      p_booking_id: bookingId,
     });
 
-    setBookings(transformed);
+    if (error) {
+      setLoading(false);
+      setErrorMessage(friendlyBookingError(error));
+      return;
+    }
+
+    await reloadAfterWrite();
+    setLoading(false);
   };
 
   // Logout
@@ -374,6 +272,18 @@ function StudentBookingsPage() {
   }
 
   const today = new Date().toISOString().split("T")[0];
+
+  const selectedMentor = mentors.find((m) => m.id === selectedMentorId);
+
+  // Live translation of the mentor-wall-clock inputs into the student's own
+  // timezone, so nobody books "4 PM" meaning two different moments.
+  const localPreview =
+    selectedMentor && date && startTime && endTime
+      ? formatInstantRangeLocal(
+          zonedWallTimeToUtc(date, startTime, selectedMentor.timezone),
+          zonedWallTimeToUtc(date, endTime, selectedMentor.timezone)
+        )
+      : "";
 
   return (
     <div className="container">
@@ -470,6 +380,26 @@ function StudentBookingsPage() {
             />
           </div>
 
+          {selectedMentor && (
+            <p style={{ fontSize: "0.9rem", color: "#555", marginBottom: "0.5rem" }}>
+              Date and times are in the mentor's timezone (
+              {selectedMentor.timezone}).
+            </p>
+          )}
+
+          {localPreview && (
+            <p style={{ fontSize: "0.92rem", fontWeight: 600, marginBottom: "1rem" }}>
+              In your local time: {localPreview}
+            </p>
+          )}
+
+          {selectedMentor && selectedMentor.bufferMinutes > 0 && (
+            <p style={{ fontSize: "0.88rem", color: "#555", marginBottom: "1rem" }}>
+              This mentor keeps a {selectedMentor.bufferMinutes}-minute gap
+              between sessions.
+            </p>
+          )}
+
           <button
             type="submit"
             disabled={submitting}
@@ -510,7 +440,7 @@ function StudentBookingsPage() {
 
         {!loading && !errorMessage && bookings.length > 0 && (
           <div className="dashboard-stats-grid">
-            {bookings.map((booking, index) => {
+            {bookings.map((booking) => {
               const accentClass =
                 booking.status === "confirmed"
                   ? "dashboard-stat-card-green"
@@ -548,7 +478,8 @@ function StudentBookingsPage() {
                     <strong>Date:</strong> {booking.scheduled_date}
                   </div>
 
-                  {/* Time */}
+                  {/* Time — absolute instants rendered in the student's own
+                      timezone; wall clock as a fallback for legacy rows. */}
                   <div
                     style={{
                       fontSize: "0.9rem",
@@ -556,8 +487,13 @@ function StudentBookingsPage() {
                       color: "var(--text)",
                     }}
                   >
-                    <strong>Time:</strong> {booking.start_time} –{" "}
-                    {booking.end_time}
+                    <strong>Time:</strong>{" "}
+                    {booking.starts_at && booking.ends_at
+                      ? formatInstantRangeLocal(
+                          booking.starts_at,
+                          booking.ends_at
+                        )
+                      : `${booking.start_time} – ${booking.end_time}`}
                   </div>
 
                   {/* Status */}

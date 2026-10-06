@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { useRole } from "../hooks/useRole";
 import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
+import { friendlyBookingError } from "../lib/bookingErrors";
+import { formatInstantRangeLocal } from "../lib/timezones";
 
 const STATUS_LABELS = {
   pending: "Pending",
@@ -11,6 +13,41 @@ const STATUS_LABELS = {
   cancelled: "Cancelled",
   completed: "Completed",
 };
+
+const BOOKING_SELECT = `
+  id,
+  scheduled_date,
+  start_time,
+  end_time,
+  starts_at,
+  ends_at,
+  status,
+  notes,
+  created_at,
+  student:profiles (
+    id,
+    full_name,
+    email
+  )
+`;
+
+function mapBookingRow(b) {
+  const studentData = Array.isArray(b.student) ? b.student[0] : b.student;
+
+  return {
+    id: b.id,
+    scheduled_date: b.scheduled_date,
+    start_time: b.start_time,
+    end_time: b.end_time,
+    starts_at: b.starts_at,
+    ends_at: b.ends_at,
+    status: b.status,
+    notes: b.notes,
+    created_at: b.created_at,
+    studentName: studentData?.full_name || "(no name)",
+    studentEmail: studentData?.email || "",
+  };
+}
 
 function MentorBookingsPage() {
   const { user, profile, signOut } = useAuth();
@@ -31,20 +68,7 @@ function MentorBookingsPage() {
 
       const { data, error } = await supabase
         .from("mentorship_bookings")
-        .select(`
-          id,
-          scheduled_date,
-          start_time,
-          end_time,
-          status,
-          notes,
-          created_at,
-          student:profiles (
-            id,
-            full_name,
-            email
-          )
-        `)
+        .select(BOOKING_SELECT)
         .eq("mentor_id", user.id)
         .order("scheduled_date", { ascending: true })
         .order("start_time", { ascending: true });
@@ -55,23 +79,7 @@ function MentorBookingsPage() {
         return;
       }
 
-      const transformed = (data || []).map((b) => {
-        const studentData = Array.isArray(b.student) ? b.student[0] : b.student;
-
-        return {
-          id: b.id,
-          scheduled_date: b.scheduled_date,
-          start_time: b.start_time,
-          end_time: b.end_time,
-          status: b.status,
-          notes: b.notes,
-          created_at: b.created_at,
-          studentName: studentData?.full_name || "(no name)",
-          studentEmail: studentData?.email || "",
-        };
-      });
-
-      setBookings(transformed);
+      setBookings((data || []).map(mapBookingRow));
       setLoading(false);
     };
 
@@ -80,6 +88,22 @@ function MentorBookingsPage() {
     }
   }, [profile, user]);
 
+  const reloadAfterWrite = async () => {
+    const { data, error } = await supabase
+      .from("mentorship_bookings")
+      .select(BOOKING_SELECT)
+      .eq("mentor_id", user.id)
+      .order("scheduled_date", { ascending: true })
+      .order("start_time", { ascending: true });
+
+    if (error) {
+      setErrorMessage("Failed to refresh bookings. Please try again.");
+      return;
+    }
+
+    setBookings((data || []).map(mapBookingRow));
+  };
+
   const handleLogout = async () => {
     const { error } = await signOut();
     if (error) {
@@ -87,9 +111,13 @@ function MentorBookingsPage() {
     }
   };
 
+  // Confirm / complete go through a direct update: the DB's state-machine
+  // trigger validates the transition and that the caller is the mentor of
+  // that booking, so a forged request still cannot change someone else's row.
   const updateStatus = async (bookingId, newStatus) => {
     setMessage("");
     setErrorMessage("");
+    setLoading(true);
 
     const { error } = await supabase
       .from("mentorship_bookings")
@@ -100,63 +128,43 @@ function MentorBookingsPage() {
       .eq("id", bookingId);
 
     if (error) {
-      setErrorMessage("Failed to update booking. Please try again.");
+      setLoading(false);
+      setErrorMessage(friendlyBookingError(error));
       return;
     }
 
     setMessage(`Booking marked as ${STATUS_LABELS[newStatus] || newStatus}.`);
+    await reloadAfterWrite();
+    setLoading(false);
+  };
 
-    // Reload bookings
+  // Cancelling uses the sanctioned cancel_booking() RPC — it verifies the
+  // caller is a participant and the transition is legal inside the DB.
+  const handleCancel = async (bookingId) => {
+    if (!window.confirm("Cancel this booking? This cannot be undone.")) return;
+
+    setMessage("");
+    setErrorMessage("");
     setLoading(true);
-    const { data, error: loadError } = await supabase
-      .from("mentorship_bookings")
-      .select(`
-        id,
-        scheduled_date,
-        start_time,
-        end_time,
-        status,
-        notes,
-        created_at,
-        student:profiles (
-          id,
-          full_name,
-          email
-        )
-      `)
-      .eq("mentor_id", user.id)
-      .order("scheduled_date", { ascending: true })
-      .order("start_time", { ascending: true });
 
-    if (!loadError) {
-      const transformed = (data || []).map((b) => {
-        const studentData = Array.isArray(b.student) ? b.student[0] : b.student;
-        return {
-          id: b.id,
-          scheduled_date: b.scheduled_date,
-          start_time: b.start_time,
-          end_time: b.end_time,
-          status: b.status,
-          notes: b.notes,
-          created_at: b.created_at,
-          studentName: studentData?.full_name || "(no name)",
-          studentEmail: studentData?.email || "",
-        };
-      });
-      setBookings(transformed);
+    const { error } = await supabase.rpc("cancel_booking", {
+      p_booking_id: bookingId,
+    });
+
+    if (error) {
+      setLoading(false);
+      setErrorMessage(friendlyBookingError(error));
+      return;
     }
 
+    setMessage("Booking cancelled.");
+    await reloadAfterWrite();
     setLoading(false);
   };
 
   const handleConfirm = (bookingId) => {
     if (!window.confirm("Confirm this booking request?")) return;
     updateStatus(bookingId, "confirmed");
-  };
-
-  const handleCancel = (bookingId) => {
-    if (!window.confirm("Cancel this booking? This cannot be undone.")) return;
-    updateStatus(bookingId, "cancelled");
   };
 
   const handleComplete = (bookingId) => {
@@ -221,7 +229,7 @@ function MentorBookingsPage() {
 
         {!loading && !errorMessage && bookings.length > 0 && (
           <div className="dashboard-stats-grid">
-            {bookings.map((b, index) => {
+            {bookings.map((b) => {
               const accentClass =
                 b.status === "confirmed"
                   ? "dashboard-stat-card-green"
@@ -272,7 +280,8 @@ function MentorBookingsPage() {
                     <strong>Date:</strong> {b.scheduled_date}
                   </div>
 
-                  {/* Time */}
+                  {/* Time — absolute instants rendered in the mentor's own
+                      timezone; wall clock as a fallback for legacy rows. */}
                   <div
                     style={{
                       fontSize: "0.9rem",
@@ -280,7 +289,10 @@ function MentorBookingsPage() {
                       color: "var(--text)",
                     }}
                   >
-                    <strong>Time:</strong> {b.start_time} – {b.end_time}
+                    <strong>Time:</strong>{" "}
+                    {b.starts_at && b.ends_at
+                      ? formatInstantRangeLocal(b.starts_at, b.ends_at)
+                      : `${b.start_time} – ${b.end_time}`}
                   </div>
 
                   {/* Status */}

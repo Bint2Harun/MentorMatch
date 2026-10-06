@@ -219,7 +219,7 @@ begin
             detail = 'Sessions cannot exceed 120 minutes.';
   end if;
 
-  if (p_scheduled_date < (now() at time zone v_tz)::date then
+  if p_scheduled_date < (now() at time zone v_tz)::date then
     raise exception 'SLOT_IN_PAST'
       using errcode = '22023',
             detail = 'Choose today or a future date.';
@@ -327,7 +327,7 @@ begin
    where id = p_booking_id;
 
   return (v_booking.id, v_booking.starts_at, v_booking.ends_at,
-          v_booking.timezone, 'cancelled');
+          v_booking.timezone, 'cancelled')::public.booking_request_result;
 end;
 $$;
 

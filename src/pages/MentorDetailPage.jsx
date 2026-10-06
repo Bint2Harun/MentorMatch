@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import { friendlyBookingError } from "../lib/bookingErrors";
+import {
+  browserTimeZone,
+  isZonedWallTimeInPast,
+  zonedWallTimeToUtc,
+  formatInstantRangeLocal,
+} from "../lib/timezones";
 
 const DAYS = [
   "Sunday",
@@ -15,8 +22,7 @@ const DAYS = [
 
 function MentorDetailPage() {
   const { mentorId } = useParams();
-  const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [mentor, setMentor] = useState(null);
   const [availability, setAvailability] = useState([]);
@@ -45,6 +51,8 @@ function MentorDetailPage() {
           bio,
           skills,
           is_approved,
+          timezone,
+          buffer_minutes,
           mentor_expertise (
             expertise_categories (
               id,
@@ -85,6 +93,9 @@ function MentorDetailPage() {
         id: mpData.id,
         bio: mpData.bio,
         skills: mpData.skills,
+        timezone: mpData.timezone || "UTC",
+        bufferMinutes:
+          typeof mpData.buffer_minutes === "number" ? mpData.buffer_minutes : 15,
         profiles: profileData,
         categories
       });
@@ -130,29 +141,45 @@ function MentorDetailPage() {
       return;
     }
 
+    // The wall clock entered here belongs to the mentor's timezone, so the
+    // past check has to be evaluated there — not in the browser's zone.
+    if (isZonedWallTimeInPast(scheduledDate, startTime, mentor.timezone)) {
+      setBookingError("Choose a future date and time.");
+      return;
+    }
+
     setSubmitting(true);
 
-    const { error } = await supabase
-      .from("mentorship_bookings")
-      .insert({
-        mentor_id: mentorId,
-        student_id: user.id,
-        scheduled_date: scheduledDate,
-        start_time: startTime,
-        end_time: endTime,
-        status: "pending",
-        notes: notes.trim() || null
-      });
+    // request_booking() is the sanctioned write path: it re-checks
+    // availability, duration, duplicates and buffer gaps inside one DB
+    // transaction, and the exclusion constraints underneath make concurrent
+    // attempts resolve to exactly one winner (no double bookings).
+    const { data, error } = await supabase.rpc("request_booking", {
+      p_mentor_id: mentorId,
+      p_scheduled_date: scheduledDate,
+      p_start_time: startTime,
+      p_end_time: endTime,
+      p_notes: notes.trim() || null,
+    });
 
     setSubmitting(false);
 
     if (error) {
-      setBookingError(error.message);
+      setBookingError(friendlyBookingError(error));
       return;
     }
 
+    // The RPC returns absolute instants; show them in the student's own
+    // timezone so "4:00 PM" always means 4:00 PM where they live.
+    const localRange = formatInstantRangeLocal(
+      data?.starts_at,
+      data?.ends_at
+    );
+
     setBookingMessage(
-      "Booking request sent successfully. Please wait for mentor confirmation."
+      localRange
+        ? `Booking request sent for ${localRange} (your local time). Please wait for mentor confirmation.`
+        : "Booking request sent successfully. Please wait for mentor confirmation."
     );
 
     // Reset form
@@ -175,6 +202,16 @@ function MentorDetailPage() {
       </main>
     );
   }
+
+  // Live translation of the mentor-wall-clock inputs into the visitor's own
+  // timezone, so nobody books "4 PM" meaning two different moments.
+  const localPreview =
+    scheduledDate && startTime && endTime
+      ? formatInstantRangeLocal(
+          zonedWallTimeToUtc(scheduledDate, startTime, mentor.timezone),
+          zonedWallTimeToUtc(scheduledDate, endTime, mentor.timezone)
+        )
+      : "";
 
   return (
     <main style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
@@ -235,6 +272,12 @@ function MentorDetailPage() {
       <section style={{ marginTop: "2rem" }}>
         <h2>Availability</h2>
 
+        <p style={{ fontSize: "0.9rem", color: "#555" }}>
+          Weekly hours in the mentor's timezone ({mentor.timezone}). Booked
+          sessions are shown to you in your own timezone (
+          {browserTimeZone()}).
+        </p>
+
         {availability.length === 0 ? (
           <p>No availability slots set by this mentor yet.</p>
         ) : (
@@ -262,10 +305,21 @@ function MentorDetailPage() {
 
         {!user ? (
           <p>
-            Please <Link to="/login">log in</Link> to request a booking.
+            Please{" "}
+            <Link
+              to={`/login?redirectTo=${encodeURIComponent(`/mentor/${mentorId}`)}`}
+            >
+              log in
+            </Link>{" "}
+            to request a booking.
           </p>
         ) : (
           <form onSubmit={handleRequestBooking}>
+            <p style={{ fontSize: "0.9rem", color: "#555", marginTop: 0 }}>
+              Date and times below are in the mentor's timezone (
+              {mentor.timezone}).
+            </p>
+
             <div style={{ marginBottom: "1rem" }}>
               <label htmlFor="date">Date: </label>
               <input
@@ -313,6 +367,25 @@ function MentorDetailPage() {
                 style={{ display: "block", width: "100%", padding: "0.6rem" }}
               />
             </div>
+
+            {localPreview && (
+              <p
+                style={{
+                  fontSize: "0.92rem",
+                  fontWeight: 600,
+                  marginBottom: "1rem"
+                }}
+              >
+                In your local time: {localPreview}
+              </p>
+            )}
+
+            {mentor.bufferMinutes > 0 && (
+              <p style={{ fontSize: "0.88rem", color: "#555" }}>
+                Note: this mentor keeps a {mentor.bufferMinutes}-minute gap
+                between sessions.
+              </p>
+            )}
 
             {bookingError && (
               <p style={{ color: "crimson" }}>{bookingError}</p>

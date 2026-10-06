@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   authBack,
@@ -35,9 +35,73 @@ import {
 
 const PILLS = ["Find mentors", "Book sessions", "Grow together"];
 
+/**
+ * sessionStorage key holding the post-login destination while an OAuth
+ * round-trip is in flight. Google sign-in returns to /login without the
+ * original query string, so the `redirectTo` parameter has to survive the
+ * redirect some other way. Session-scoped (per tab) and time-limited below.
+ */
+const REDIRECT_KEY = "mentormatch-redirectTo";
+const REDIRECT_TTL_MS = 30 * 60 * 1000;
+
+/**
+ * Accept only same-site absolute paths: `redirectTo` arrives from the query
+ * string, so it must never become an open redirect (https://evil.example,
+ * //evil.example) or a /login loop.
+ */
+function safeRedirectTarget(value) {
+  if (!value) return "";
+  if (!value.startsWith("/") || value.startsWith("//")) return "";
+  if (value === "/login" || value.startsWith("/login?")) return "";
+  return value;
+}
+
+function readStoredRedirect() {
+  try {
+    const raw = window.sessionStorage.getItem(REDIRECT_KEY);
+    if (!raw) return "";
+
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed?.value !== "string" ||
+      typeof parsed?.at !== "number" ||
+      Date.now() - parsed.at > REDIRECT_TTL_MS
+    ) {
+      window.sessionStorage.removeItem(REDIRECT_KEY);
+      return "";
+    }
+
+    return safeRedirectTarget(parsed.value);
+  } catch {
+    return "";
+  }
+}
+
+function storeRedirect(value) {
+  try {
+    window.sessionStorage.setItem(
+      REDIRECT_KEY,
+      JSON.stringify({ value, at: Date.now() })
+    );
+  } catch {
+    // Storage unavailable: the redirect still works for password logins.
+  }
+}
+
+function clearStoredRedirect() {
+  try {
+    window.sessionStorage.removeItem(REDIRECT_KEY);
+  } catch {
+    // Nothing to clean up.
+  }
+}
+
 function LoginPage() {
   const navigate = useNavigate();
   const { signIn, signInWithOAuth, user, profile } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  const redirectTo = safeRedirectTarget(searchParams.get("redirectTo"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,8 +110,30 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [oauthBusy, setOauthBusy] = useState(false);
 
+  // Remember where this login was launched from so the Google OAuth round-trip
+  // (which returns to /login without the query string) can still honour it.
+  useEffect(() => {
+    if (redirectTo) storeRedirect(redirectTo);
+  }, [redirectTo]);
+
   useEffect(() => {
     if (!user || !profile) return;
+
+    // Prefer the explicit ?redirectTo= parameter; fall back to the value stashed
+    // for OAuth, then to the role dashboard. Either way it is re-sanitised.
+    let target = redirectTo;
+
+    if (target) {
+      clearStoredRedirect();
+    } else {
+      target = readStoredRedirect();
+      if (target) clearStoredRedirect();
+    }
+
+    if (target) {
+      navigate(target, { replace: true });
+      return;
+    }
 
     if (profile.role === "Student") {
       navigate("/student-dashboard");
@@ -58,7 +144,7 @@ function LoginPage() {
     } else {
       navigate("/");
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, navigate, redirectTo]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();

@@ -99,7 +99,7 @@ function TrustStats() {
                 {label}
               </span>
               {note && (
-                <span className="text-[0.78rem] text-ink-400 dark:text-ink-500">
+                <span className="text-[0.78rem] text-ink-500 dark:text-ink-400">
                   {note}
                 </span>
               )}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "./Logo";
@@ -17,12 +17,49 @@ function dashboardPathFor(role) {
   return "/admin-dashboard";
 }
 
+/** Secondary destinations surfaced inside the avatar/profile menu. */
+function menuLinksFor(role) {
+  if (role === "Student") {
+    return [
+      { to: "/student-bookings", label: "My Bookings" },
+      { to: "/browse-mentors", label: "Find Mentors" },
+    ];
+  }
+
+  if (role === "Mentor") {
+    return [
+      { to: "/mentor-bookings", label: "Manage Bookings" },
+      { to: "/mentor-availability", label: "Availability" },
+    ];
+  }
+
+  if (role === "Administrator") {
+    return [{ to: "/admin-categories", label: "Expertise Categories" }];
+  }
+
+  return [];
+}
+
+function initialsFor(profile, user) {
+  const source = profile?.full_name || user?.email || "";
+  return (
+    source
+      .split(" ")
+      .map((part) => part.charAt(0))
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "?"
+  );
+}
+
 /**
  * Marketing site header: brand, primary nav, auth CTAs and theme toggle.
  *
  * Kept separate from the dashboard chrome so the landing pages get a consistent
- * bar without inheriting the sidebar layout. "Login" is the outline variant and
- * "Register" the solid one, so the account action reads as the primary CTA.
+ * bar without inheriting the sidebar layout. The top-right group holds exactly
+ * one primary CTA: "Sign In" for guests, "Dashboard" for signed-in users. An
+ * avatar button opens the profile menu for signed-in users. "Browse Mentors"
+ * lives only in the primary nav, never duplicated in this group.
  */
 /**
  * Resolve the initial theme: an explicit stored choice wins, otherwise follow
@@ -46,14 +83,45 @@ function initialTheme() {
 }
 
 function SiteHeader() {
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [dark, setDark] = useState(initialTheme);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   // Mirror the resolved theme onto <html>, which is where the CSS custom
   // variant reads it from. DOM sync only; no state to set here.
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
+
+  // Close the profile menu on outside clicks and on Escape, so keyboard users
+  // are never trapped behind an open menu.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  const handleSignOut = async () => {
+    setMenuOpen(false);
+    await signOut();
+  };
 
   const toggleTheme = () => {
     const next = !dark;
@@ -104,7 +172,7 @@ function SiteHeader() {
               <Link
                 key={link.label}
                 to={link.to}
-                className="rounded-lg px-3 py-2 text-[0.95rem] font-semibold whitespace-nowrap text-ink-500 no-underline transition-colors hover:bg-[var(--surface-muted)] hover:text-ink-900 dark:hover:text-ink-50"
+                className="rounded-lg px-3 py-2 text-[0.95rem] font-semibold whitespace-nowrap text-ink-500 no-underline transition-colors hover:bg-[var(--surface-muted)] hover:text-ink-900 dark:text-ink-300 dark:hover:text-ink-50"
               >
                 {link.label}
               </Link>
@@ -116,7 +184,7 @@ function SiteHeader() {
                   `rounded-lg px-3 py-2 text-[0.95rem] font-semibold whitespace-nowrap no-underline transition-colors hover:bg-[var(--surface-muted)] hover:text-ink-900 dark:hover:text-ink-50 ${
                     isActive
                       ? "text-brand-600 dark:text-brand-400"
-                      : "text-ink-500"
+                      : "text-ink-500 dark:text-ink-300"
                   }`
                 }
               >
@@ -171,20 +239,78 @@ function SiteHeader() {
           </button>
 
           {!user ? (
+            /* Guests: one primary CTA (Sign In) plus a secondary Register. */
             <>
-              <Link to="/login" className={btnOutline}>
-                Login
+              <Link to="/login" className={btnPrimary}>
+                Sign In
               </Link>
-              <Link to="/register" className={btnPrimary}>
+              <Link to="/register" className={btnOutline}>
                 Register
               </Link>
             </>
           ) : (
+            /* Signed in: avatar/profile menu plus the single Dashboard CTA.
+               "Browse Mentors" is intentionally not duplicated here — it lives
+               in the primary nav only. */
             <>
-              <Link to="/browse-mentors" className={btnOutline}>
-                Browse Mentors
-              </Link>
-              <Link to={dashboardPathFor(profile?.role)} className={btnPrimary}>
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-controls="profile-menu"
+                  aria-label="Open account menu"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--hairline)] bg-brand-700 text-[0.82rem] font-black text-white transition-colors hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                >
+                  {initialsFor(profile, user)}
+                </button>
+
+                {menuOpen && (
+                  <div
+                    id="profile-menu"
+                    role="menu"
+                    className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-[var(--hairline)] bg-[var(--surface)] p-1.5 shadow-[0_14px_40px_rgba(11,28,50,0.18)]"
+                  >
+                    <div className="mb-1 border-b border-[var(--hairline)] px-3 pt-1.5 pb-2.5">
+                      <p className="truncate text-[0.92rem] font-bold text-ink-900 dark:text-white">
+                        {profile?.full_name || user.email || "Account"}
+                      </p>
+                      <p className="truncate text-[0.8rem] text-ink-500 dark:text-ink-400">
+                        {[profile?.role, user.email]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+
+                    {menuLinksFor(profile?.role).map((link) => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-[0.9rem] font-semibold text-ink-700 no-underline transition-colors hover:bg-[var(--surface-muted)] hover:text-ink-900 dark:text-ink-200 dark:hover:text-white"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-[0.9rem] font-semibold text-ink-700 transition-colors hover:bg-[var(--surface-muted)] hover:text-ink-900 dark:text-ink-200 dark:hover:text-white"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <Link
+                to={dashboardPathFor(profile?.role)}
+                className={btnPrimary}
+              >
                 Dashboard
               </Link>
             </>

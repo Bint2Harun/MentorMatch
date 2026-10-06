@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRole } from "../hooks/useRole";
 import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
+import { formatInstantRangeLocal } from "../lib/timezones";
 
 const ROLE_LABELS = {
   Student: "Student",
@@ -72,6 +73,8 @@ function AdminDashboard() {
         scheduled_date,
         start_time,
         end_time,
+        starts_at,
+        ends_at,
         status,
         student:profiles (
           id,
@@ -113,6 +116,8 @@ function AdminDashboard() {
         scheduled_date: booking.scheduled_date,
         start_time: booking.start_time,
         end_time: booking.end_time,
+        starts_at: booking.starts_at,
+        ends_at: booking.ends_at,
         status: booking.status,
         studentName: studentData?.full_name || "(no name)",
         studentEmail: studentData?.email || "",
@@ -169,9 +174,13 @@ function AdminDashboard() {
   useEffect(() => {
     if (profile?.role !== "Administrator") return;
 
+    // Standard fetch-on-mount: the loaders flip their loading flags before
+    // awaiting requests, which the new rule reads as a cascading render.
+    /* eslint-disable react-hooks/set-state-in-effect */
     loadUsers();
     loadBookings();
     loadPendingMentors();
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [profile, user]);
 
   const handleLogout = async () => {
@@ -584,8 +593,13 @@ function AdminDashboard() {
                           marginBottom: "0.65rem",
                         }}
                       >
-                        <strong>Time:</strong> {booking.start_time} –{" "}
-                        {booking.end_time}
+                        <strong>Time:</strong>{" "}
+                        {booking.starts_at && booking.ends_at
+                          ? formatInstantRangeLocal(
+                              booking.starts_at,
+                              booking.ends_at
+                            )
+                          : `${booking.start_time} – ${booking.end_time}`}
                       </div>
 
                       <span

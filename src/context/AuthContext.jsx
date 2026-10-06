@@ -162,6 +162,9 @@ export function AuthProvider({ children }) {
   );
 }
 
+// Context files legitimately export both the provider and the hook that
+// consumes it; splitting them across files would only add import churn.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }

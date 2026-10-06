@@ -6,7 +6,7 @@ import AccessDenied from "../components/AccessDenied";
 import { supabase } from "../lib/supabase";
 
 function AdminCategoriesPage() {
-  const { user, profile, signOut } = useAuth();
+  const { profile, signOut } = useAuth();
   const { loading: authLoading, profilePending, isAllowed } = useRole("Administrator");
 
   const [categoriesByFaculty, setCategoriesByFaculty] = useState({});
@@ -65,6 +65,9 @@ function AdminCategoriesPage() {
 
   useEffect(() => {
     if (profile?.role === "Administrator") {
+      // Standard fetch-on-mount: the loader flips its loading flag before
+      // awaiting the request, which the new rule reads as a cascading render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadCategories();
     }
   }, [profile]);

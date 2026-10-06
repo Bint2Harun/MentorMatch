@@ -20,7 +20,7 @@ function BrowseMentorsPage() {
   const [hasNextPage, setHasNextPage] = useState(false);
 
   // Search term handed over from the landing page hero (?q=...).
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = (searchParams.get("q") ?? "").trim();
 
   // Faculty list comes from expertise_categories rather than from the mentors
@@ -104,6 +104,12 @@ function BrowseMentorsPage() {
   // Changing the faculty invalidates the current offset.
   const handleFacultyChange = (faculty) => {
     setSelectedFaculty(faculty);
+    setPage(0);
+  };
+
+  // Drop the ?q= term and re-run the search across every faculty.
+  const handleClearSearch = () => {
+    setSearchParams({});
     setPage(0);
   };
 
@@ -194,7 +200,7 @@ function BrowseMentorsPage() {
 
           <p className="browse-mentors-count">
             {mentors.length === 0
-              ? "No mentors on this page"
+              ? "No mentors match your filters"
               : `Showing ${page * PAGE_SIZE + 1}-${
                   page * PAGE_SIZE + mentors.length
                 }`}
@@ -210,7 +216,47 @@ function BrowseMentorsPage() {
       {/* Empty State */}
       {!errorMessage && mentors.length === 0 && (
         <div className="dashboard-empty-state">
-          No approved mentors were found for this faculty.
+          <p>
+            {searchQuery
+              ? `No mentors matched \u201C${searchQuery}\u201D${
+                  selectedFaculty !== "All" ? ` in ${selectedFaculty}` : ""
+                }.`
+              : selectedFaculty !== "All"
+              ? `No approved mentors were found in ${selectedFaculty}.`
+              : "No approved mentors are available yet."}
+          </p>
+
+          <p>Try a different keyword, switch faculty, or browse everyone.</p>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              marginTop: "0.5rem",
+            }}
+          >
+            {searchQuery && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleClearSearch}
+              >
+                Clear search
+              </button>
+            )}
+
+            {selectedFaculty !== "All" && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => handleFacultyChange("All")}
+              >
+                Show all faculties
+              </button>
+            )}
+          </div>
         </div>
       )}
 

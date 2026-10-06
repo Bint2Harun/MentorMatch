@@ -82,8 +82,11 @@ export const authLabel =
 
 /* The border is a custom step because the default hairline fails the 3:1
    non-text contrast requirement for input boundaries. */
+/* ink-400 is 3.35:1 on white and ink-500 is 3.4:1 on the dark surface, so the
+   placeholder and "or" divider use ink-500 (light) / ink-400 (dark) to clear
+   the 4.5:1 minimum for secondary text. */
 export const authInput =
-  "w-full rounded-[10px] border border-[var(--hairline-strong)] bg-[var(--surface)] px-3.5 py-3 text-[1rem] text-ink-900 transition-colors placeholder:text-ink-400 focus:border-brand-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 dark:text-white dark:placeholder:text-ink-500";
+  "w-full rounded-[10px] border border-[var(--hairline-strong)] bg-[var(--surface)] px-3.5 py-3 text-[1rem] text-ink-900 transition-colors placeholder:text-ink-500 focus:border-brand-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 dark:text-white dark:placeholder:text-ink-400";
 
 export const authPasswordWrap = "relative";
 
@@ -94,7 +97,7 @@ export const authOauth =
   "flex w-full items-center justify-center gap-2.5 rounded-[10px] border border-[var(--hairline-strong)] bg-[var(--surface)] px-4 py-3 text-[0.97rem] font-semibold text-ink-900 transition-colors hover:bg-[var(--surface-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-ink-50";
 
 export const authDivider =
-  "my-5 text-center text-[0.85rem] font-semibold text-ink-400 dark:text-ink-500";
+  "my-5 text-center text-[0.85rem] font-semibold text-ink-500 dark:text-ink-400";
 
 export const authNote =
   "mb-5 rounded-xl border border-[var(--hairline)] bg-[var(--surface-sunken)] px-4 py-3 text-[0.88rem] leading-relaxed text-ink-500 dark:text-ink-300";
