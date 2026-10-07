@@ -46,9 +46,9 @@ function ContactPage() {
 
             <a
               className={btnPrimary}
-              href="mailto:rashida2harun@gmail.com?subject=MentorMatch%20enquiry"
+              href="mailto:my1onlinestores@gmail.com?subject=MentorMatch%20enquiry"
             >
-              rashida2harun@gmail.com
+              my1onlinestores@gmail.com
             </a>
           </div>
 

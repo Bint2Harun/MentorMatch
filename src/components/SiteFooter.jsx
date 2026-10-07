@@ -102,10 +102,10 @@ function SiteFooter() {
 
           <a
             className="inline-flex items-center gap-2 text-[0.88rem] break-all text-ink-400 no-underline transition-colors hover:text-white"
-            href="mailto:rashida2harun@gmail.com"
+            href="mailto:my1onlinestores@gmail.com"
           >
             <MailIcon width={16} height={16} />
-            rashida2harun@gmail.com
+            my1onlinestores@gmail.com
           </a>
         </div>
 
