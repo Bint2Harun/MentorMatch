@@ -85,7 +85,10 @@ function TrustStats() {
       className="border-y border-[var(--hairline)] bg-[var(--surface-muted)]"
       aria-label="MentorMatch platform activity"
     >
-      <ul className="mx-auto flex w-full max-w-[1180px] flex-wrap list-none items-center justify-center gap-x-10 gap-y-5 px-5 py-7 p-0 sm:justify-between">
+      {/* p-0 used to sit after px-5/py-7 here: whichever order the utility
+          sheet emits, the shorthand can cancel the horizontal padding and push
+          the stats to the screen edge. Preflight already zeroes list padding. */}
+      <ul className="mx-auto flex w-full max-w-[1180px] flex-wrap list-none items-center justify-center gap-x-10 gap-y-5 px-5 py-7 sm:justify-between">
         {metrics.map(({ icon: Icon, value, label, note }) => (
           <li key={label} className="flex items-center gap-3">
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300">

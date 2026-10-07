@@ -143,14 +143,14 @@ function HomePage() {
               Accelerate Your Skills.
             </h1>
 
-            <p className="mt-5 text-[1.08rem] leading-[1.7] text-ink-500 dark:text-ink-300">
+            <p className="mt-6 text-[1.08rem] leading-[1.7] text-ink-500 dark:text-ink-300">
               A secure platform for students to find mentors, view real
               availability, request sessions, and avoid booking conflicts.
             </p>
 
             {/* Integrated search: one bordered control, button docked inside */}
             <form
-              className="mt-7 flex w-full max-w-[560px] flex-col gap-2.5 rounded-[14px] border border-[var(--hairline-strong)] bg-[var(--surface)] p-2 sm:flex-row sm:items-center"
+              className="mt-8 flex w-full max-w-[560px] flex-col gap-2.5 rounded-[14px] border border-[var(--hairline-strong)] bg-[var(--surface)] p-2 sm:flex-row sm:items-center"
               onSubmit={handleSearch}
             >
               <div className="flex min-w-0 flex-1 items-center gap-2.5 px-2">
@@ -163,7 +163,7 @@ function HomePage() {
 
                 <input
                   type="search"
-                  className="min-w-0 flex-1 border-0 bg-transparent py-2 text-[1rem] text-ink-900 outline-none placeholder:text-ink-500 focus-visible:outline-none dark:text-white dark:placeholder:text-ink-400"
+                  className="min-h-11 min-w-0 flex-1 border-0 bg-transparent py-2.5 text-[1rem] text-ink-900 outline-none placeholder:text-ink-500 focus-visible:outline-none dark:text-white dark:placeholder:text-ink-400"
                   placeholder="Search by subject, industry, or skill"
                   aria-label="Search mentors"
                   value={query}
@@ -171,7 +171,10 @@ function HomePage() {
                 />
               </div>
 
-              <button type="submit" className={`${btnPrimary} w-full shrink-0 sm:w-auto`}>
+              <button
+                type="submit"
+                className={`${btnPrimary} min-h-11 w-full shrink-0 sm:w-auto`}
+              >
                 Search
               </button>
             </form>
@@ -181,7 +184,7 @@ function HomePage() {
             <div
               role="group"
               aria-label="Popular searches"
-              className="mt-3.5 flex w-full max-w-[560px] flex-wrap items-center gap-2"
+              className="mt-4 flex w-full max-w-[560px] flex-wrap items-center gap-2"
             >
               <span className="mr-0.5 text-[0.85rem] font-semibold text-ink-500 dark:text-ink-400">
                 Popular:
@@ -191,7 +194,7 @@ function HomePage() {
                   key={chip}
                   type="button"
                   onClick={() => runSearch(chip)}
-                  className="rounded-full border border-[var(--hairline-strong)] bg-[var(--surface)] px-3 py-1.5 text-[0.85rem] font-semibold text-ink-700 transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-ink-200 dark:hover:border-brand-400 dark:hover:bg-brand-900/40 dark:hover:text-brand-300"
+                  className="inline-flex min-h-11 items-center rounded-full border border-[var(--hairline-strong)] bg-[var(--surface)] px-4 py-2 text-[0.85rem] font-semibold text-ink-700 transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-ink-200 dark:hover:border-brand-400 dark:hover:bg-brand-900/40 dark:hover:text-brand-300"
                 >
                   {chip}
                 </button>
@@ -232,8 +235,12 @@ function HomePage() {
               the visitor's own timezone. Fills the right-hand column so the
               desktop/tablet layout stays balanced. */}
           <div className="relative mx-auto w-full max-w-[540px] lg:max-w-none">
+            {/* Accent slab behind the photo. Hidden below 480px and kept flush
+                with the photo edge until `sm`: the -right-4 offset otherwise
+                hugs the viewport edge on narrow screens and reads as a floating
+                block overlapping the content. */}
             <div
-              className="absolute -top-4 -right-4 bottom-4 left-4 rounded-2xl bg-brand-100 dark:bg-brand-900/40"
+              className="absolute -top-4 right-0 bottom-4 left-4 rounded-2xl bg-brand-100 dark:bg-brand-900/40 max-[480px]:hidden sm:-right-4"
               aria-hidden="true"
             />
             <img

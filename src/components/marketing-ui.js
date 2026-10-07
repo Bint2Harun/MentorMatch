@@ -7,7 +7,7 @@
  */
 
 export const btnBase =
-  "inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-[0.95rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-[0.95rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600";
 
 export const btnPrimary = `${btnBase} border-brand-700 bg-brand-700 text-white hover:border-brand-800 hover:bg-brand-800 disabled:cursor-not-allowed disabled:border-ink-300 disabled:bg-ink-300`;
 
