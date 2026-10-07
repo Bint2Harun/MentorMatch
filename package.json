@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify": "npm run verify:header && npm run verify:routes && npm run verify:roles",
+    "verify:header": "node scripts/verify-header.mjs",
+    "verify:routes": "node scripts/verify-routes.mjs",
+    "verify:roles": "node scripts/verify-roles.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",
@@ -28,6 +32,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
     "globals": "^17.11.0",
+    "puppeteer-core": "^25.12.0",
     "typescript": "^5.9.3",
     "vite": "^8.2.2"
   }
