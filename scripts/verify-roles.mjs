@@ -49,14 +49,16 @@ const USERS = {
   },
 };
 
-const ALL = ["Student", "Mentor", "Administrator"];
-
 /** Route access matrix, transcribed from the allowedRoles in src/App.jsx. */
 const MATRIX = [
   { route: "/admin-dashboard", marker: "Admin Dashboard", roles: ["Administrator"] },
   { route: "/mentor-dashboard", marker: "Mentor Dashboard", roles: ["Mentor"] },
-  { route: "/student-dashboard", marker: "Student Dashboard", roles: ALL },
-  { route: "/browse-mentors", marker: "Browse Mentors", roles: ALL },
+  { route: "/student-dashboard", marker: "Student Dashboard", roles: ["Student"] },
+  {
+    route: "/browse-mentors",
+    marker: "Browse Mentors",
+    roles: ["Student", "Mentor", "Administrator"],
+  },
   { route: "/mentor-availability", marker: "Weekly Hours", roles: ["Mentor"] },
   { route: "/mentor-bookings", marker: "Manage Bookings", roles: ["Mentor"] },
   { route: "/student-bookings", marker: "My Bookings", roles: ["Student"] },
@@ -168,6 +170,23 @@ for (const role of Object.keys(USERS)) {
   const access = await browser.newPage();
   await access.setViewport({ width: 1280, height: 900 });
   await prepare(access, role);
+
+  await access.goto(`${BASE_URL}/login?redirectTo=%2Fstudent-dashboard`, {
+    waitUntil: "networkidle2",
+    timeout: 30000,
+  });
+  await access
+    .waitForFunction(
+      (path) => location.pathname === path,
+      { timeout: 15000 },
+      u.dashboard
+    )
+    .catch(() => {});
+  check(
+    `[${role}] student dashboard return URL respects role`,
+    (await access.evaluate(() => location.pathname)) === u.dashboard,
+    `path=${await access.evaluate(() => location.pathname)}`
+  );
 
   for (const row of MATRIX) {
     const allowed = row.roles.includes(role);

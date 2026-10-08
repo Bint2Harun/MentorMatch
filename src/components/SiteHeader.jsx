@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "./Logo";
 import { btnOutline, btnPrimary } from "./marketing-ui";
+import { ROLE_HOME } from "../types";
 
 const NAV_LINKS = [
   { to: "/browse-mentors", label: "Browse Mentors" },
@@ -12,9 +13,7 @@ const NAV_LINKS = [
 ];
 
 function dashboardPathFor(role) {
-  if (role === "Student") return "/student-dashboard";
-  if (role === "Mentor") return "/mentor-dashboard";
-  return "/admin-dashboard";
+  return ROLE_HOME[role] || "/";
 }
 
 /** Secondary destinations surfaced inside the avatar/profile menu. */

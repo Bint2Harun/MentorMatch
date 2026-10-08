@@ -32,6 +32,7 @@ import {
   GoogleIcon,
   ArrowLeftIcon,
 } from "../components/Icons";
+import { ROLE_HOME } from "../types";
 
 const PILLS = ["Find mentors", "Book sessions", "Grow together"];
 
@@ -54,6 +55,21 @@ function safeRedirectTarget(value) {
   if (!value.startsWith("/") || value.startsWith("//")) return "";
   if (value === "/login" || value.startsWith("/login?")) return "";
   return value;
+}
+
+function dashboardForRole(role) {
+  return ROLE_HOME[role] || "/";
+}
+
+function redirectForRole(target, role) {
+  const targetPath = target.split(/[?#]/, 1)[0];
+  const dashboardRole = Object.entries(ROLE_HOME).find(
+    ([, path]) => path === targetPath
+  )?.[0];
+
+  return dashboardRole && dashboardRole !== role
+    ? dashboardForRole(role)
+    : target;
 }
 
 function readStoredRedirect() {
@@ -130,20 +146,10 @@ function LoginPage() {
       if (target) clearStoredRedirect();
     }
 
-    if (target) {
-      navigate(target, { replace: true });
-      return;
-    }
-
-    if (profile.role === "Student") {
-      navigate("/student-dashboard");
-    } else if (profile.role === "Mentor") {
-      navigate("/mentor-dashboard");
-    } else if (profile.role === "Administrator") {
-      navigate("/admin-dashboard");
-    } else {
-      navigate("/");
-    }
+    navigate(
+      target ? redirectForRole(target, profile.role) : dashboardForRole(profile.role),
+      { replace: true }
+    );
   }, [user, profile, navigate, redirectTo]);
 
   const handleSubmit = async (event) => {
