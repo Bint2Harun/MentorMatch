@@ -200,13 +200,9 @@ function AdminDashboard() {
     setMessage("");
     setErrorMessage("");
 
-    const { error } = await supabase
-      .from("mentor_profiles")
-      .update({
-        is_approved: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", mentorId);
+    const { error } = await supabase.rpc("approve_mentor", {
+      p_mentor_id: mentorId,
+    });
 
     if (error) {
       setErrorMessage("Failed to approve mentor. Please try again.");
@@ -225,13 +221,9 @@ function AdminDashboard() {
     setMessage("");
     setErrorMessage("");
 
-    const { error } = await supabase
-      .from("mentor_profiles")
-      .update({
-        is_approved: false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", mentorId);
+    const { error } = await supabase.rpc("reject_mentor", {
+      p_mentor_id: mentorId,
+    });
 
     if (error) {
       setErrorMessage("Failed to reject mentor. Please try again.");
