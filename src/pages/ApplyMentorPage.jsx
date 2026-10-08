@@ -113,19 +113,22 @@ function ApplyMentorPage() {
 
     setSubmitting(true);
 
-    // Upsert mentor profile
-    const { error: mentorError } = await supabase
-      .from("mentor_profiles")
-      .upsert(
-        {
+    const mentorProfile = {
+      bio: bio.trim(),
+      skills: skillList,
+      updated_at: new Date().toISOString(),
+    };
+    const mentorWrite = existingApplication
+      ? supabase
+          .from("mentor_profiles")
+          .update(mentorProfile)
+          .eq("id", user.id)
+      : supabase.from("mentor_profiles").insert({
           id: user.id,
-          bio: bio.trim(),
-          skills: skillList,
+          ...mentorProfile,
           is_approved: false,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: "id" }
-      );
+        });
+    const { error: mentorError } = await mentorWrite;
 
     if (mentorError) {
       setSubmitting(false);
@@ -172,7 +175,7 @@ function ApplyMentorPage() {
       id: user.id,
       bio: bio.trim(),
       skills: skillList,
-      is_approved: false
+      is_approved: existingApplication?.is_approved ?? false,
     });
   };
 
